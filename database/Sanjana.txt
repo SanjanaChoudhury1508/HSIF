@@ -1,0 +1,3 @@
+Please don't touch other folders inside ai folder.
+This file is made so that folders can be pushed into github.
+After adding your folders and files you can delete this file.
