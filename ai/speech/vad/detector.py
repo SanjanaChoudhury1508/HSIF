@@ -74,11 +74,28 @@ class VoiceActivityDetector:
 
         return segments
 
+    def get_pauses(self, segments):
+        pauses = []
+
+        for i in range(len(segments) - 1):
+            pause_start = segments[i]["end"]
+            pause_end = segments[i + 1]["start"]
+
+            pauses.append({
+                "start": pause_start,
+                "end": pause_end,
+                "duration": pause_end - pause_start
+            })
+
+        return pauses
+        
     def detect(self, audio_path):
         frames = self.detect_frames(audio_path)
 
         segments = self.get_speech_segments(frames)
 
+        pauses = self.get_pauses(segments)
+        
         total_duration = frames[-1]["end"] if frames else 0
 
         speech_duration = sum(
@@ -95,5 +112,6 @@ class VoiceActivityDetector:
             "duration": total_duration,
             "speech_segments": segments,
             "speech_duration": speech_duration,
-            "silence_duration": silence_duration
+            "silence_duration": silence_duration,
+            "pauses": pauses
         }
