@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+
+tests/audio/*.wav
+tests/audio/*.m4a
+
+models/
+.env
