@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from backend.app.api.process import router as process_router
 
 app = FastAPI(
     title="HSIF Backend",
@@ -13,3 +14,8 @@ def health():
         "status": "ok",
         "service": "HSIF Backend"
     }
+
+app.include_router(
+    process_router,
+    prefix="/api/v1"
+)
