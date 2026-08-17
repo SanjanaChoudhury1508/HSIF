@@ -6,9 +6,21 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from backend.app.services.pipeline_service import PipelineService
 from backend.app.schemas.process import ProcessResponse
 
+
 router = APIRouter()
 
 pipeline_service = PipelineService()
+
+ALLOWED_AUDIO_EXTENSIONS = {
+    ".wav",
+    ".mp3",
+    ".m4a",
+    ".ogg",
+    ".flac",
+    ".aac",
+}
+
+MAX_FILE_SIZE = 25 * 1024 * 1024
 
 
 @router.post(
@@ -24,15 +36,39 @@ async def process_audio(
             detail="Audio file is required."
         )
 
-    suffix = Path(audio.filename).suffix
+    extension = Path(audio.filename).suffix.lower()
+
+    if extension not in ALLOWED_AUDIO_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Unsupported audio format: {extension}. "
+                f"Supported formats: "
+                f"{', '.join(sorted(ALLOWED_AUDIO_EXTENSIONS))}"
+            )
+        )
+
+    content = await audio.read()
+
+    if not content:
+        raise HTTPException(
+            status_code=400,
+            detail="Uploaded audio file is empty."
+        )
+
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail="Audio file exceeds the 25 MB size limit."
+        )
+
+    temp_path = None
 
     try:
         with NamedTemporaryFile(
             delete=False,
-            suffix=suffix
+            suffix=extension
         ) as temp_file:
-
-            content = await audio.read()
             temp_file.write(content)
             temp_path = Path(temp_file.name)
 
@@ -46,6 +82,12 @@ async def process_audio(
             detail=str(exc)
         )
 
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc)
+        )
+
     except Exception as exc:
         raise HTTPException(
             status_code=500,
@@ -53,5 +95,5 @@ async def process_audio(
         )
 
     finally:
-        if "temp_path" in locals() and temp_path.exists():
+        if temp_path and temp_path.exists():
             temp_path.unlink(missing_ok=True)
