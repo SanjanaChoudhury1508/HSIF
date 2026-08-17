@@ -4,14 +4,17 @@ from tempfile import NamedTemporaryFile
 from fastapi import APIRouter, UploadFile, File, HTTPException
 
 from backend.app.services.pipeline_service import PipelineService
-
+from backend.app.schemas.process import ProcessResponse
 
 router = APIRouter()
 
 pipeline_service = PipelineService()
 
 
-@router.post("/process")
+@router.post(
+    "/process",
+    response_model=ProcessResponse
+)
 async def process_audio(
     audio: UploadFile = File(...)
 ):
