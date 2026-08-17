@@ -93,3 +93,4 @@ class ProcessResponse(BaseModel):
     speech: SpeechResponse
     human_state: HumanStateResponse
     dialogue: DialogueResponse
+    response: str

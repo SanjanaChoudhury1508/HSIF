@@ -49,6 +49,8 @@ def main():
     print("=" * 60)
 
     print(result["dialogue"]["prompt"])
+    print("\n=== AI RESPONSE ===")
+    print(result["response"])
 
 
 if __name__ == "__main__":
