@@ -3,11 +3,7 @@ import numpy as np
 
 
 class VoiceActivityDetector:
-    def __init__(
-        self,
-        frame_duration=0.03,
-        energy_threshold=0.01
-    ):
+    def __init__(self, frame_duration=0.03, energy_threshold=0.01):
         self.frame_duration = frame_duration
         self.energy_threshold = energy_threshold
 
@@ -18,9 +14,7 @@ class VoiceActivityDetector:
             mono=True
         )
 
-        frame_size = int(
-            self.frame_duration * sample_rate
-        )
+        frame_size = int(self.frame_duration * sample_rate)
 
         frames = []
 
@@ -30,9 +24,7 @@ class VoiceActivityDetector:
             if len(frame) == 0:
                 continue
 
-            energy = np.sqrt(
-                np.mean(frame ** 2)
-            )
+            energy = np.sqrt(np.mean(frame ** 2))
 
             is_speech = energy > self.energy_threshold
 
@@ -50,11 +42,9 @@ class VoiceActivityDetector:
 
     def get_speech_segments(self, frames):
         segments = []
-
         current_start = None
 
         for frame in frames:
-
             if frame["is_speech"] and current_start is None:
                 current_start = frame["start"]
 
@@ -63,7 +53,6 @@ class VoiceActivityDetector:
                     "start": current_start,
                     "end": frame["start"]
                 })
-
                 current_start = None
 
         if current_start is not None and frames:
@@ -88,15 +77,15 @@ class VoiceActivityDetector:
             })
 
         return pauses
-        
+
     def detect(self, audio_path):
         frames = self.detect_frames(audio_path)
 
         segments = self.get_speech_segments(frames)
 
         pauses = self.get_pauses(segments)
-        
-        total_duration = frames[-1]["end"] if frames else 0
+
+        total_duration = frames[-1]["end"] if frames else 0.0
 
         speech_duration = sum(
             segment["end"] - segment["start"]
@@ -105,7 +94,24 @@ class VoiceActivityDetector:
 
         silence_duration = max(
             total_duration - speech_duration,
-            0
+            0.0
+        )
+
+        pause_durations = [
+            pause["duration"]
+            for pause in pauses
+        ]
+
+        longest_pause = (
+            max(pause_durations)
+            if pause_durations
+            else 0.0
+        )
+
+        speech_to_silence_ratio = (
+            speech_duration / silence_duration
+            if silence_duration > 0
+            else float("inf") if speech_duration > 0 else 0.0
         )
 
         return {
@@ -113,5 +119,8 @@ class VoiceActivityDetector:
             "speech_segments": segments,
             "speech_duration": speech_duration,
             "silence_duration": silence_duration,
-            "pauses": pauses
+            "pauses": pauses,
+            "pause_count": len(pauses),
+            "longest_pause": longest_pause,
+            "speech_to_silence_ratio": speech_to_silence_ratio
         }
