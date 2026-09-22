@@ -9,7 +9,6 @@ from ai.speech.feature_extraction.acoustic_features import (
 
 
 class SpeechService:
-
     def __init__(self):
         self.audio_processor = AudioProcessor()
         self.vad = VoiceActivityDetector()
@@ -35,9 +34,7 @@ class SpeechService:
                 processed_path
             )
 
-            vad_result = self.vad.detect(
-                processed_path
-            )
+            vad_result = self.vad.detect(processed_path)
 
             transcription = self.transcriber.transcribe(
                 processed_path
@@ -45,7 +42,8 @@ class SpeechService:
 
             features = self.feature_extractor.extract(
                 processed_path,
-                vad_result
+                vad_result,
+                transcription["text"]
             )
 
             return {
@@ -68,6 +66,13 @@ class SpeechService:
                 "vad": {
                     "speech_segments": (
                         vad_result["speech_segments"]
+                    ),
+                    "pause_count": vad_result["pause_count"],
+                    "longest_pause": round(
+                        vad_result["longest_pause"], 3
+                    ),
+                    "speech_to_silence_ratio": round(
+                        vad_result["speech_to_silence_ratio"], 3
                     ),
                     "pauses": [
                         {
@@ -97,14 +102,23 @@ class SpeechService:
                     "mean_energy": round(
                         features["mean_energy"], 4
                     ),
+                    "std_energy": round(
+                        features["std_energy"], 4
+                    ),
                     "mean_pitch": round(
                         features["mean_pitch"], 2
+                    ),
+                    "std_pitch": round(
+                        features["std_pitch"], 2
                     ),
                     "min_pitch": round(
                         features["min_pitch"], 2
                     ),
                     "max_pitch": round(
                         features["max_pitch"], 2
+                    ),
+                    "speech_rate": round(
+                        features["speech_rate"], 3
                     )
                 }
             }
