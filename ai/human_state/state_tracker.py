@@ -29,6 +29,26 @@ class StateTracker:
     def clear(self) -> None:
         self._history.clear()
 
+    def get_trajectory(self) -> list[dict[str, Any]]:
+        trajectory = []
+
+        for index, state in enumerate(self._history):
+            trajectory.append(
+                {
+                    "step": index,
+                    "emotion": {
+                        "label": state.emotion.label,
+                        "score": state.emotion.score,
+                    },
+                    "hesitation": state.hesitation.score,
+                    "confidence": state.confidence.score,
+                    "engagement": state.engagement.score,
+                    "cognitive_load": state.cognitive_load.score,
+                }
+            )
+
+        return trajectory
+
     def get_state_changes(self) -> list[dict[str, Any]]:
         changes = []
 
