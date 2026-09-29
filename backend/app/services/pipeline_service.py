@@ -3,13 +3,14 @@ from ai.human_state.human_state_engine import HumanStateEngine
 from ai.dialogue.dialogue_service import DialogueService
 from backend.app.services.llm.llm_service import LLMService
 from backend.app.services.llm.gemini_provider import GeminiProvider
+from backend.app.services.llm.provider import LLMProvider
 class PipelineService:
-    def __init__(self):
+    def __init__(self, llm_provider: LLMProvider | None = None):
         self.speech_service = SpeechService()
         self.human_state_engine = HumanStateEngine()
         self.dialogue_service = DialogueService()
         self.llm_service = LLMService(
-            provider=GeminiProvider()
+            provider=llm_provider
         )
     def process_audio(self, audio_path):
         speech_result = self.speech_service.process(audio_path)

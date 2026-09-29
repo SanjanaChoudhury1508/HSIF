@@ -1,3 +1,4 @@
+import pytest
 from pathlib import Path
 from fastapi.testclient import TestClient
 from backend.app.main import app
@@ -18,6 +19,9 @@ def test_health():
 
 
 def test_process_audio():
+    if not AUDIO_FILE.exists():
+        pytest.skip("Local audio fixture recording.m4a is not available.")
+        
     with AUDIO_FILE.open("rb") as audio:
         response = client.post(
             "/api/v1/process",

@@ -78,7 +78,7 @@ def test_struggling_user_gets_clarification_policy():
         ),
     )
 
-    assert result["policy"]["strategy"] == "clarify"
+    assert result["policy"]["strategy"] == "reassure"
     assert result["policy"]["priority"] == "high"
 
 
@@ -95,7 +95,7 @@ def test_overloaded_user_gets_simplification_policy():
         ),
     )
 
-    assert result["policy"]["strategy"] == "simplify"
+    assert result["policy"]["strategy"] == "reduce_information"
 
 
 def test_disengaged_user_gets_reengagement_policy():
@@ -155,7 +155,7 @@ def test_prompt_contains_dialogue_policy():
         ),
     )
 
-    assert "clarify" in result["prompt"]
+    assert "reassure" in result["prompt"]
     assert "high" in result["prompt"]
 
 
@@ -209,3 +209,130 @@ def test_invalid_user_message_raises_type_error():
             user_message=123,
             human_state=make_human_state(),
         )
+
+def test_add_response_stores_human_state_and_dialogue_strategy():
+    service = DialogueService()
+
+    human_state = make_human_state(
+        emotion="confused",
+        hesitation=0.8,
+        confidence=0.3,
+        engagement=0.6,
+        cognitive_load=0.8,
+    )
+
+    result = service.process(
+        user_message="I don't understand this.",
+        human_state=human_state,
+    )
+
+    strategy = result["policy"]["strategy"]
+
+    service.add_response(
+        user_message="I don't understand this.",
+        assistant_message="Let me explain it more simply.",
+        human_state=result["dialogue_state"],
+        dialogue_strategy=strategy,
+    )
+
+    history = service.get_history()
+
+    assert history[0]["human_state"] == result["dialogue_state"]
+    assert history[0]["dialogue_strategy"] == strategy
+
+def test_state_transition_normal_to_confused():
+    service = DialogueService()
+
+    normal_result = service.process(
+        user_message="I understand this.",
+        human_state=make_human_state(
+            emotion="neutral",
+            hesitation=0.1,
+            confidence=0.9,
+            engagement=0.9,
+            cognitive_load=0.2,
+        ),
+    )
+
+    confused_result = service.process(
+        user_message="Wait, I don't understand this anymore.",
+        human_state=make_human_state(
+            emotion="confused",
+            hesitation=0.8,
+            confidence=0.3,
+            engagement=0.7,
+            cognitive_load=0.7,
+        ),
+    )
+
+    assert normal_result["policy"]["strategy"] == "continue"
+    assert confused_result["policy"]["strategy"] == "reassure"
+
+
+def test_state_transition_to_frustrated():
+    service = DialogueService()
+
+    result = service.process(
+        user_message="This is frustrating. I still can't get it.",
+        human_state=make_human_state(
+            emotion="frustrated",
+            emotion_score=0.9,
+            hesitation=0.6,
+            confidence=0.4,
+            engagement=0.6,
+            cognitive_load=0.7,
+        ),
+    )
+
+    assert result["dialogue_state"]["emotion"] == "frustrated"
+    assert result["policy"]["strategy"] == "acknowledge_frustration"
+
+
+def test_state_transition_to_disengaged():
+    service = DialogueService()
+
+    result = service.process(
+        user_message="Okay...",
+        human_state=make_human_state(
+            emotion="neutral",
+            hesitation=0.2,
+            confidence=0.6,
+            engagement=0.2,
+            cognitive_load=0.3,
+        ),
+    )
+
+    assert result["dialogue_state"]["interaction_state"] == "disengaged"
+    assert result["policy"]["strategy"] == "re_engage"
+
+
+def test_state_transition_recovered():
+    service = DialogueService()
+
+    # User is initially struggling.
+    struggling_result = service.process(
+        user_message="I don't understand.",
+        human_state=make_human_state(
+            emotion="confused",
+            hesitation=0.8,
+            confidence=0.3,
+            engagement=0.6,
+            cognitive_load=0.8,
+        ),
+    )
+
+    # User becomes confident and engaged again.
+    recovered_result = service.process(
+        user_message="Okay, I understand now. Let's continue.",
+        human_state=make_human_state(
+            emotion="neutral",
+            hesitation=0.1,
+            confidence=0.9,
+            engagement=0.9,
+            cognitive_load=0.2,
+        ),
+    )
+
+    assert struggling_result["policy"]["strategy"] == "reassure"
+    assert recovered_result["dialogue_state"]["interaction_state"] == "confident_engaged"
+    assert recovered_result["policy"]["strategy"] == "continue"    
