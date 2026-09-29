@@ -1,27 +1,37 @@
+from pathlib import Path
+
+from ai.speech.preprocessing.audio_processor import AudioProcessor
 from ai.speech.vad.detector import VoiceActivityDetector
 from ai.speech.feature_extraction.acoustic_features import (
-    AcousticFeatureExtractor
+    AcousticFeatureExtractor,
 )
 
 
-audio_path = "tests/audio/processed.wav"
+def test_audio_features():
+    input_path = Path("tests/audio/recording.m4a")
+    processed_path = Path("tests/audio/test_features_processed.wav")
 
+    processor = AudioProcessor()
+    processor.convert_to_wav(input_path, processed_path)
 
-vad = VoiceActivityDetector()
+    try:
+        vad = VoiceActivityDetector()
+        vad_result = vad.detect(processed_path)
 
-vad_result = vad.detect(audio_path)
+        extractor = AcousticFeatureExtractor()
+        features = extractor.extract(
+            processed_path,
+            vad_result,
+        )
 
+        assert features["duration"] > 0
+        assert features["speech_duration"] > 0
+        assert features["number_of_pauses"] >= 0
+        assert features["mean_energy"] >= 0
+        assert features["mean_pitch"] >= 0
+        assert features["min_pitch"] >= 0
+        assert features["max_pitch"] >= 0
 
-extractor = AcousticFeatureExtractor()
-
-features = extractor.extract(
-    audio_path,
-    vad_result
-)
-
-
-print("Audio Features")
-print("--------------------")
-
-for key, value in features.items():
-    print(f"{key}: {value}")
+    finally:
+        if processed_path.exists():
+            processed_path.unlink()
