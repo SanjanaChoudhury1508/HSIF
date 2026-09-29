@@ -1,7 +1,7 @@
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 
 from backend.app.services.pipeline_service import PipelineService
 from backend.app.schemas.process import ProcessResponse
@@ -9,7 +9,9 @@ from backend.app.schemas.process import ProcessResponse
 
 router = APIRouter()
 
-pipeline_service = PipelineService()
+# In-memory session store.
+# Each session gets its own PipelineService and conversation memory.
+sessions: dict[str, PipelineService] = {}
 
 ALLOWED_AUDIO_EXTENSIONS = {
     ".wav",
@@ -23,12 +25,24 @@ ALLOWED_AUDIO_EXTENSIONS = {
 MAX_FILE_SIZE = 25 * 1024 * 1024
 
 
+def get_pipeline_service(session_id: str) -> PipelineService:
+    if session_id not in sessions:
+        sessions[session_id] = PipelineService()
+
+    return sessions[session_id]
+
+
 @router.post(
     "/process",
     response_model=ProcessResponse
 )
 async def process_audio(
-    audio: UploadFile = File(...)
+    audio: UploadFile = File(...),
+    session_id: str = Query(
+        ...,
+        min_length=1,
+        description="Unique identifier for the conversation session."
+    ),
 ):
     if not audio.filename:
         raise HTTPException(
@@ -71,6 +85,8 @@ async def process_audio(
         ) as temp_file:
             temp_file.write(content)
             temp_path = Path(temp_file.name)
+
+        pipeline_service = get_pipeline_service(session_id)
 
         result = pipeline_service.process_audio(temp_path)
 
