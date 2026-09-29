@@ -15,6 +15,8 @@ class ConversationTurn:
 
     user_message: str
     assistant_message: str
+    human_state: Dict[str, Any] | None = None
+    dialogue_strategy: str | None = None
 
     def to_dict(self) -> Dict[str, str]:
         """Convert the conversation turn into a dictionary."""
@@ -42,6 +44,8 @@ class ConversationMemory:
         self,
         user_message: str,
         assistant_message: str,
+        human_state: Dict[str, Any] | None = None,
+        dialogue_strategy: str | None = None,
     ) -> None:
         """Add a conversation turn to memory."""
 
@@ -51,9 +55,17 @@ class ConversationMemory:
         if not isinstance(assistant_message, str):
             raise TypeError("assistant_message must be a string.")
 
+        if human_state is not None and not isinstance(human_state, dict):
+            raise TypeError("human_state must be a dictionary or None.")
+
+        if dialogue_strategy is not None and not isinstance(dialogue_strategy, str):
+            raise TypeError("dialogue_strategy must be a string or None.")
+
         turn = ConversationTurn(
             user_message=user_message.strip(),
             assistant_message=assistant_message.strip(),
+            human_state=human_state,
+            dialogue_strategy=dialogue_strategy,
         )
 
         self._history.append(turn)
