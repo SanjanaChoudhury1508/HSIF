@@ -15,6 +15,7 @@ def test_transcription():
         transcriber = SpeechTranscriber()
         result = transcriber.transcribe(processed_path)
 
+        assert isinstance(result, dict)
         assert isinstance(result["text"], str)
         assert result["text"].strip()
 

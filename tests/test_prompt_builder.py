@@ -170,3 +170,26 @@ def test_prompt_limits_history_to_recent_five_turns():
     assert "User message 1" not in result
     assert "User message 2" in result
     assert "User message 6" in result
+
+def test_prompt_contains_strategy_specific_instruction():
+    prompt = PromptBuilder.build(
+        user_message="I don't understand this.",
+        dialogue_state={
+            "emotion": "confused",
+            "interaction_state": "struggling",
+            "confidence": 0.3,
+            "hesitation": 0.8,
+            "engagement": 0.6,
+            "cognitive_load": 0.8,
+        },
+        policy_decision={
+            "strategy": "simplify",
+            "priority": "high",
+            "reason": "High cognitive load requires a simpler explanation.",
+        },
+    )
+
+    assert (
+        "Use simpler language, reduce complexity, and explain one idea at a time."
+        in prompt
+    )

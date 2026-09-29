@@ -24,6 +24,8 @@ def test_audio_features():
             vad_result,
         )
 
+        assert isinstance(features, dict)
+        assert features
         assert features["duration"] > 0
         assert features["speech_duration"] > 0
         assert features["number_of_pauses"] >= 0
