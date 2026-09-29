@@ -1,12 +1,20 @@
-from pprint import pprint
+from pathlib import Path
+
+import pytest
 
 from ai.speech.speech_service import SpeechService
 
 
-audio_path = "tests/audio/recording.m4a"
+AUDIO_PATH = Path("tests/audio/recording.m4a")
 
-speech_service = SpeechService()
 
-result = speech_service.process(audio_path)
+def test_speech_service():
+    if not AUDIO_PATH.exists():
+        pytest.skip("Local audio fixture recording.m4a is not available.")
 
-pprint(result)
+    speech_service = SpeechService()
+
+    result = speech_service.process(str(AUDIO_PATH))
+
+    assert isinstance(result, dict)
+    assert "transcript" in result

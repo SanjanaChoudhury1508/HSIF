@@ -1,22 +1,23 @@
+from pathlib import Path
+
+import pytest
+
 from ai.speech.vad.detector import VoiceActivityDetector
 
 
-audio_path = "tests/audio/processed.wav"
+AUDIO_PATH = Path("tests/audio/processed.wav")
 
-vad = VoiceActivityDetector()
 
-result = vad.detect(audio_path)
+def test_vad():
+    if not AUDIO_PATH.exists():
+        pytest.skip("Local audio fixture processed.wav is not available.")
 
-print("Total duration:", result["duration"])
+    vad = VoiceActivityDetector()
 
-print("Speech duration:", result["speech_duration"])
+    result = vad.detect(str(AUDIO_PATH))
 
-print("Silence duration:", result["silence_duration"])
-
-print("\nSpeech segments:")
-
-for segment in result["speech_segments"]:
-    print(
-        f"{segment['start']:.2f}s - "
-        f"{segment['end']:.2f}s"
-    )
+    assert isinstance(result, dict)
+    assert "duration" in result
+    assert "speech_duration" in result
+    assert "silence_duration" in result
+    assert "speech_segments" in result

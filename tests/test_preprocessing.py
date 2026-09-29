@@ -1,15 +1,24 @@
+from pathlib import Path
+
+import pytest
+
 from ai.speech.preprocessing.audio_processor import AudioProcessor
 
 
-input_audio = "tests/audio/recording.m4a"
-output_audio = "tests/audio/processed.wav"
+INPUT_AUDIO = Path("tests/audio/recording.m4a")
+OUTPUT_AUDIO = Path("tests/audio/processed.wav")
 
-processor = AudioProcessor()
 
-result = processor.convert_to_wav(
-    input_audio,
-    output_audio
-)
+def test_audio_preprocessing():
+    if not INPUT_AUDIO.exists():
+        pytest.skip("Local audio fixture recording.m4a is not available.")
 
-print("Processed audio:")
-print(result)
+    processor = AudioProcessor()
+
+    result = processor.convert_to_wav(
+        str(INPUT_AUDIO),
+        str(OUTPUT_AUDIO),
+    )
+
+    assert result
+    assert OUTPUT_AUDIO.exists()

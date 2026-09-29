@@ -1,27 +1,29 @@
+from pathlib import Path
+
+import pytest
+
 from ai.speech.vad.detector import VoiceActivityDetector
 from ai.speech.feature_extraction.acoustic_features import (
-    AcousticFeatureExtractor
+    AcousticFeatureExtractor,
 )
 
 
-audio_path = "tests/audio/processed.wav"
+AUDIO_PATH = Path("tests/audio/processed.wav")
 
 
-vad = VoiceActivityDetector()
+def test_audio_features():
+    if not AUDIO_PATH.exists():
+        pytest.skip("Local audio fixture processed.wav is not available.")
 
-vad_result = vad.detect(audio_path)
+    vad = VoiceActivityDetector()
+    vad_result = vad.detect(str(AUDIO_PATH))
 
+    extractor = AcousticFeatureExtractor()
 
-extractor = AcousticFeatureExtractor()
+    features = extractor.extract(
+        str(AUDIO_PATH),
+        vad_result,
+    )
 
-features = extractor.extract(
-    audio_path,
-    vad_result
-)
-
-
-print("Audio Features")
-print("--------------------")
-
-for key, value in features.items():
-    print(f"{key}: {value}")
+    assert isinstance(features, dict)
+    assert features
