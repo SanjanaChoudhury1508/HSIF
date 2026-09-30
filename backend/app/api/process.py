@@ -4,7 +4,10 @@ from tempfile import NamedTemporaryFile
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 
 from backend.app.services.pipeline_service import PipelineService
-from backend.app.schemas.process import ProcessResponse
+from backend.app.schemas.process import (
+    ProcessResponse,
+    HumanStateTrajectoryResponse,
+)
 
 
 router = APIRouter()
@@ -113,3 +116,27 @@ async def process_audio(
     finally:
         if temp_path and temp_path.exists():
             temp_path.unlink(missing_ok=True)
+            
+@router.get(
+    "/session/{session_id}/state",
+    response_model=HumanStateTrajectoryResponse,
+)
+async def get_session_state(session_id: str):
+    pipeline_service = get_pipeline_service(session_id)
+
+    current_state = pipeline_service.human_state_engine.get_current_state()
+
+    return {
+        "session_id": session_id,
+        "current_state": (
+            current_state.to_dict()
+            if current_state is not None
+            else None
+        ),
+        "trajectory": (
+            pipeline_service.human_state_engine.get_state_trajectory()
+        ),
+        "changes": (
+            pipeline_service.human_state_engine.get_state_changes()
+        ),
+    }

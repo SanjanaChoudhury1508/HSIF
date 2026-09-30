@@ -106,3 +106,42 @@ def test_session_conversation_histories_are_isolated():
 
     assert history_b[0]["user_message"] == "Hello from session B"
     assert history_b[0]["assistant_message"] == "Response for session B"
+    
+def test_session_state_trajectory_is_isolated():
+    sessions.clear()
+
+    session_a = get_pipeline_service("trajectory-a")
+    session_b = get_pipeline_service("trajectory-b")
+
+    sample_speech = {
+        "transcript": "Test conversation turn.",
+        "audio": {},
+        "features": {},
+        "vad": {},
+    }
+
+    state_a_1 = session_a.human_state_engine.process(sample_speech)
+    state_a_2 = session_a.human_state_engine.process(sample_speech)
+
+    session_b.human_state_engine.process(sample_speech)
+
+    response_a = client.get("/api/v1/session/trajectory-a/state")
+    response_b = client.get("/api/v1/session/trajectory-b/state")
+
+    assert response_a.status_code == 200
+    assert response_b.status_code == 200
+
+    data_a = response_a.json()
+    data_b = response_b.json()
+
+    assert data_a["session_id"] == "trajectory-a"
+    assert data_b["session_id"] == "trajectory-b"
+
+    assert len(data_a["trajectory"]) == 2
+    assert len(data_b["trajectory"]) == 1
+
+    assert data_a["current_state"] == state_a_2.to_dict()
+    assert data_a["trajectory"][0]["step"] == 0
+    assert data_a["trajectory"][1]["step"] == 1
+
+    assert data_b["trajectory"][0]["step"] == 0
