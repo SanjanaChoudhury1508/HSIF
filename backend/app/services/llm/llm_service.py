@@ -1,5 +1,8 @@
+import os
+
 from backend.app.services.llm.provider import LLMProvider
 from backend.app.services.llm.mock_provider import MockLLMProvider
+from backend.app.services.llm.gemini_provider import GeminiProvider
 
 
 class LLMService:
@@ -8,7 +11,21 @@ class LLMService:
         self,
         provider: LLMProvider | None = None,
     ):
-        self.provider = provider or MockLLMProvider()
+        if provider is not None:
+            self.provider = provider
+            return
+
+        provider_name = os.getenv("LLM_PROVIDER", "mock").lower()
+
+        if provider_name == "gemini":
+            self.provider = GeminiProvider()
+        elif provider_name == "mock":
+            self.provider = MockLLMProvider()
+        else:
+            raise ValueError(
+                f"Unsupported LLM_PROVIDER: {provider_name}. "
+                "Use 'mock' or 'gemini'."
+            )
 
     def generate(self, prompt: str) -> str:
         if not isinstance(prompt, str):
