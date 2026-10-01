@@ -8,13 +8,14 @@ from backend.app.schemas.process import (
     ProcessResponse,
     HumanStateTrajectoryResponse,
 )
-
+from database.repository import SessionRepository
 
 router = APIRouter()
 
 # In-memory session store.
 # Each session gets its own PipelineService and conversation memory.
 sessions: dict[str, PipelineService] = {}
+repository = SessionRepository()
 
 ALLOWED_AUDIO_EXTENSIONS = {
     ".wav",
@@ -30,7 +31,10 @@ MAX_FILE_SIZE = 25 * 1024 * 1024
 
 def get_pipeline_service(session_id: str) -> PipelineService:
     if session_id not in sessions:
-        sessions[session_id] = PipelineService()
+        sessions[session_id] = PipelineService(
+            session_id=session_id,
+            repository=repository,
+        )
 
     return sessions[session_id]
 
