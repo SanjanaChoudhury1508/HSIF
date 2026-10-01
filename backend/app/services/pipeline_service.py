@@ -1,5 +1,6 @@
 from ai.speech.speech_service import SpeechService
 from ai.human_state.human_state_engine import HumanStateEngine
+from ai.human_state.hsr import build_human_state
 from ai.dialogue.dialogue_service import DialogueService
 from backend.app.services.llm.llm_service import LLMService
 from backend.app.services.llm.provider import LLMProvider
@@ -62,10 +63,10 @@ class PipelineService:
             "dialogue": dialogue_result,
             "response": llm_response,
         }
-        
-        
+
+
     def _restore_history(self):
-        """Restore persisted conversation history into in-memory memory."""
+        """Restore persisted conversation history and human-state trajectory."""
 
         self.repository.get_or_create_session(self.session_id)
 
@@ -75,9 +76,26 @@ class PipelineService:
         )
 
         for turn in turns:
+            # Restore conversation memory.
             self.dialogue_service.add_response(
                 user_message=turn.user_message,
                 assistant_message=turn.assistant_message,
                 human_state=turn.human_state,
                 dialogue_strategy=turn.dialogue_strategy,
+            )
+
+            # Restore Human State trajectory.
+            persisted_state = turn.human_state
+
+            restored_state = build_human_state(
+                emotion_label=persisted_state["emotion"]["label"],
+                emotion_score=persisted_state["emotion"]["score"],
+                hesitation_score=persisted_state["hesitation"]["score"],
+                confidence_score=persisted_state["confidence"]["score"],
+                engagement_score=persisted_state["engagement"]["score"],
+                cognitive_load_score=persisted_state["cognitive_load"]["score"],
+            )
+
+            self.human_state_engine.state_tracker.add_state(
+                restored_state
             )

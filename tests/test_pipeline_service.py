@@ -47,7 +47,7 @@ def test_pipeline_service_stores_completed_conversation_turn():
     assert history[0]["user_message"] == "Hello, how are you?"
     assert history[0]["assistant_message"] == "This is the assistant response."
     assert history[0]["dialogue_strategy"] == result["dialogue"]["policy"]["strategy"]
-    
+
 def test_pipeline_adapts_to_high_cognitive_load():
     llm_provider = Mock()
     llm_provider.generate.return_value = "Here is a simpler explanation."
@@ -140,3 +140,60 @@ def test_pipeline_adapts_to_frustration():
 
     assert len(history) == 1
     assert history[0]["dialogue_strategy"] == "acknowledge_frustration"
+
+def test_pipeline_service_restores_persisted_history_and_state():
+    repository = Mock()
+
+    persisted_state = {
+        "emotion": {
+            "label": "excited",
+            "score": 0.739,
+        },
+        "hesitation": {
+            "score": 0.227,
+        },
+        "confidence": {
+            "score": 0.713,
+        },
+        "engagement": {
+            "score": 0.792,
+        },
+        "cognitive_load": {
+            "score": 0.274,
+        },
+    }
+
+    persisted_turn = Mock()
+    persisted_turn.user_message = "I am ready to continue."
+    persisted_turn.assistant_message = "Great, let's continue."
+    persisted_turn.human_state = persisted_state
+    persisted_turn.dialogue_strategy = "continue"
+
+    repository.get_or_create_session.return_value = Mock()
+    repository.get_turns.return_value = [persisted_turn]
+
+    service = PipelineService(
+        session_id="restart-test-session",
+        repository=repository,
+    )
+
+    history = service.dialogue_service.get_history()
+    trajectory = service.human_state_engine.get_state_trajectory()
+
+    assert len(history) == 1
+    assert history[0]["user_message"] == "I am ready to continue."
+    assert history[0]["assistant_message"] == "Great, let's continue."
+    assert history[0]["dialogue_strategy"] == "continue"
+
+    assert len(trajectory) == 1
+    assert trajectory[0]["emotion"]["label"] == "excited"
+    assert trajectory[0]["emotion"]["score"] == 0.739
+    assert trajectory[0]["hesitation"] == 0.227
+    assert trajectory[0]["confidence"] == 0.713
+    assert trajectory[0]["engagement"] == 0.792
+    assert trajectory[0]["cognitive_load"] == 0.274
+
+    repository.get_or_create_session.assert_called_once_with(
+        "restart-test-session"
+    )
+    repository.get_turns.assert_called_once()
