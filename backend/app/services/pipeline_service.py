@@ -3,7 +3,7 @@ from ai.human_state.human_state_engine import HumanStateEngine
 from ai.human_state.hsr import build_human_state
 from ai.dialogue.dialogue_service import DialogueService
 from backend.app.services.llm.llm_service import LLMService
-from backend.app.services.llm.provider import LLMProvider
+
 from database.repository import SessionRepository
 
 class PipelineService:

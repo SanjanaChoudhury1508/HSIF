@@ -29,11 +29,15 @@ ALLOWED_AUDIO_EXTENSIONS = {
 MAX_FILE_SIZE = 25 * 1024 * 1024
 
 
-def get_pipeline_service(session_id: str) -> PipelineService:
+def get_pipeline_service(
+    session_id: str,
+    llm_provider=None,
+) -> PipelineService:
     if session_id not in sessions:
         sessions[session_id] = PipelineService(
             session_id=session_id,
             repository=repository,
+            llm_provider=llm_provider,
         )
 
     return sessions[session_id]

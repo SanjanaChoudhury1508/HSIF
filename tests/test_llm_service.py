@@ -1,22 +1,27 @@
+from unittest.mock import Mock
+
 from backend.app.services.llm.llm_service import LLMService
 
 
 def test_llm_service():
-    service = LLMService()
+    provider = Mock()
+    provider.generate.return_value = "Test response"
 
-    response = service.generate(
-        "Hello, this is a test prompt."
-    )
+    service = LLMService(provider=provider)
 
-    assert isinstance(response, str)
-    assert response.strip()
+    result = service.generate("Hello")
+
+    assert result == "Test response"
+    provider.generate.assert_called_once_with("Hello")
 
 
 def test_llm_service_rejects_empty_prompt():
-    service = LLMService()
+    provider = Mock()
+
+    service = LLMService(provider=provider)
 
     try:
         service.generate("")
-        assert False
-    except ValueError:
-        assert True
+        assert False, "Expected ValueError"
+    except ValueError as exc:
+        assert str(exc) == "prompt cannot be empty."

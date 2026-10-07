@@ -172,7 +172,11 @@ def test_pipeline_service_restores_persisted_history_and_state():
     repository.get_or_create_session.return_value = Mock()
     repository.get_turns.return_value = [persisted_turn]
 
+    llm_provider = Mock()
+    llm_provider.generate.return_value = "Restored conversation response."
+    
     service = PipelineService(
+        llm_provider=llm_provider,
         session_id="restart-test-session",
         repository=repository,
     )

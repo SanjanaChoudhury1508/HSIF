@@ -1,6 +1,9 @@
 import pytest
 from pathlib import Path
+from unittest.mock import Mock
+
 from fastapi.testclient import TestClient
+
 from backend.app.main import app
 from backend.app.api.process import sessions, get_pipeline_service
 
@@ -8,6 +11,10 @@ client = TestClient(app)
 
 AUDIO_FILE = Path("tests/audio/recording.m4a")
 
+def create_test_provider():
+    provider = Mock()
+    provider.generate.return_value = "Test AI response."
+    return provider
 
 def test_health():
     response = client.get("/health")
@@ -20,9 +27,24 @@ def test_health():
     assert data["service"] == "HSIF Backend"
 
 
-def test_process_audio():
+def test_process_audio(monkeypatch):
     if not AUDIO_FILE.exists():
         pytest.skip("Local audio fixture recording.m4a is not available.")
+
+    test_provider = create_test_provider()
+
+    original_get_pipeline_service = get_pipeline_service
+
+    def get_test_pipeline_service(session_id):
+        return original_get_pipeline_service(
+            session_id,
+            llm_provider=test_provider,
+        )
+
+    monkeypatch.setattr(
+        "backend.app.api.process.get_pipeline_service",
+        get_test_pipeline_service,
+    )
 
     with AUDIO_FILE.open("rb") as audio:
         response = client.post(
@@ -31,9 +53,9 @@ def test_process_audio():
                 "audio": (
                     "recording.m4a",
                     audio,
-                    "audio/mp4"
+                    "audio/mp4",
                 )
-            }
+            },
         )
 
     assert response.status_code == 200
@@ -48,7 +70,6 @@ def test_process_audio():
     assert "emotion" in data["human_state"]
     assert "policy" in data["dialogue"]
 
-
 def test_unsupported_audio_format():
     response = client.post(
         "/api/v1/process?session_id=test-session",
@@ -56,30 +77,57 @@ def test_unsupported_audio_format():
             "audio": (
                 "test.txt",
                 b"not an audio file",
-                "text/plain"
+                "text/plain",
             )
-        }
+        },
     )
 
     assert response.status_code == 400
 
+
+def create_test_provider():
+    provider = Mock()
+    provider.generate.return_value = "Test AI response."
+    return provider
+
+
 def test_sessions_are_isolated():
     sessions.clear()
 
-    session_a_first = get_pipeline_service("session-a")
-    session_a_second = get_pipeline_service("session-a")
-    session_b = get_pipeline_service("session-b")
+    test_provider = create_test_provider()
+
+    session_a_first = get_pipeline_service(
+        "session-a",
+        llm_provider=test_provider,
+    )
+    session_a_second = get_pipeline_service(
+        "session-a",
+        llm_provider=test_provider,
+    )
+    session_b = get_pipeline_service(
+        "session-b",
+        llm_provider=test_provider,
+    )
 
     assert session_a_first is session_a_second
     assert session_a_first is not session_b
 
     assert session_a_first.dialogue_service is not session_b.dialogue_service
-    
+
 def test_session_conversation_histories_are_isolated():
     sessions.clear()
 
-    session_a = get_pipeline_service("session-a")
-    session_b = get_pipeline_service("session-b")
+    test_provider = create_test_provider()
+
+    session_a = get_pipeline_service(
+        "session-a",
+        llm_provider=test_provider,
+    )
+    session_b = get_pipeline_service(
+        "session-b",
+        llm_provider=test_provider,
+    )
+
 
     session_a.dialogue_service.add_response(
         user_message="Hello from session A",
@@ -106,12 +154,21 @@ def test_session_conversation_histories_are_isolated():
 
     assert history_b[0]["user_message"] == "Hello from session B"
     assert history_b[0]["assistant_message"] == "Response for session B"
-    
+
+
 def test_session_state_trajectory_is_isolated():
     sessions.clear()
 
-    session_a = get_pipeline_service("trajectory-a")
-    session_b = get_pipeline_service("trajectory-b")
+    test_provider = create_test_provider()
+
+    session_a = get_pipeline_service(
+        "trajectory-a",
+        llm_provider=test_provider,
+    )
+    session_b = get_pipeline_service(
+        "trajectory-b",
+        llm_provider=test_provider,
+    )
 
     sample_speech = {
         "transcript": "Test conversation turn.",
