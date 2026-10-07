@@ -1,29 +1,39 @@
 from pathlib import Path
 
-import pytest
-
+from ai.speech.preprocessing.audio_processor import AudioProcessor
 from ai.speech.vad.detector import VoiceActivityDetector
 from ai.speech.feature_extraction.acoustic_features import (
     AcousticFeatureExtractor,
 )
 
 
-AUDIO_PATH = Path("tests/audio/processed.wav")
-
-
 def test_audio_features():
-    if not AUDIO_PATH.exists():
-        pytest.skip("Local audio fixture processed.wav is not available.")
+    input_path = Path("tests/audio/recording.m4a")
+    processed_path = Path("tests/audio/test_features_processed.wav")
 
-    vad = VoiceActivityDetector()
-    vad_result = vad.detect(str(AUDIO_PATH))
+    processor = AudioProcessor()
+    processor.convert_to_wav(input_path, processed_path)
 
-    extractor = AcousticFeatureExtractor()
+    try:
+        vad = VoiceActivityDetector()
+        vad_result = vad.detect(processed_path)
 
-    features = extractor.extract(
-        str(AUDIO_PATH),
-        vad_result,
-    )
+        extractor = AcousticFeatureExtractor()
+        features = extractor.extract(
+            processed_path,
+            vad_result,
+        )
 
-    assert isinstance(features, dict)
-    assert features
+        assert isinstance(features, dict)
+        assert features
+        assert features["duration"] > 0
+        assert features["speech_duration"] > 0
+        assert features["number_of_pauses"] >= 0
+        assert features["mean_energy"] >= 0
+        assert features["mean_pitch"] >= 0
+        assert features["min_pitch"] >= 0
+        assert features["max_pitch"] >= 0
+
+    finally:
+        if processed_path.exists():
+            processed_path.unlink()

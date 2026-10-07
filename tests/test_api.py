@@ -1,11 +1,20 @@
 import pytest
 from pathlib import Path
+from unittest.mock import Mock
+
 from fastapi.testclient import TestClient
+
 from backend.app.main import app
+from backend.app.api.process import sessions, get_pipeline_service
 
 client = TestClient(app)
 
 AUDIO_FILE = Path("tests/audio/recording.m4a")
+
+def create_test_provider():
+    provider = Mock()
+    provider.generate.return_value = "Test AI response."
+    return provider
 
 def test_health():
     response = client.get("/health")
@@ -18,20 +27,35 @@ def test_health():
     assert data["service"] == "HSIF Backend"
 
 
-def test_process_audio():
+def test_process_audio(monkeypatch):
     if not AUDIO_FILE.exists():
         pytest.skip("Local audio fixture recording.m4a is not available.")
-        
+
+    test_provider = create_test_provider()
+
+    original_get_pipeline_service = get_pipeline_service
+
+    def get_test_pipeline_service(session_id):
+        return original_get_pipeline_service(
+            session_id,
+            llm_provider=test_provider,
+        )
+
+    monkeypatch.setattr(
+        "backend.app.api.process.get_pipeline_service",
+        get_test_pipeline_service,
+    )
+
     with AUDIO_FILE.open("rb") as audio:
         response = client.post(
-            "/api/v1/process",
+            "/api/v1/process?session_id=test-session",
             files={
                 "audio": (
                     "recording.m4a",
                     audio,
-                    "audio/mp4"
+                    "audio/mp4",
                 )
-            }
+            },
         )
 
     assert response.status_code == 200
@@ -46,17 +70,135 @@ def test_process_audio():
     assert "emotion" in data["human_state"]
     assert "policy" in data["dialogue"]
 
-
 def test_unsupported_audio_format():
     response = client.post(
-        "/api/v1/process",
+        "/api/v1/process?session_id=test-session",
         files={
             "audio": (
                 "test.txt",
                 b"not an audio file",
-                "text/plain"
+                "text/plain",
             )
-        }
+        },
     )
 
     assert response.status_code == 400
+
+
+def create_test_provider():
+    provider = Mock()
+    provider.generate.return_value = "Test AI response."
+    return provider
+
+
+def test_sessions_are_isolated():
+    sessions.clear()
+
+    test_provider = create_test_provider()
+
+    session_a_first = get_pipeline_service(
+        "session-a",
+        llm_provider=test_provider,
+    )
+    session_a_second = get_pipeline_service(
+        "session-a",
+        llm_provider=test_provider,
+    )
+    session_b = get_pipeline_service(
+        "session-b",
+        llm_provider=test_provider,
+    )
+
+    assert session_a_first is session_a_second
+    assert session_a_first is not session_b
+
+    assert session_a_first.dialogue_service is not session_b.dialogue_service
+
+def test_session_conversation_histories_are_isolated():
+    sessions.clear()
+
+    test_provider = create_test_provider()
+
+    session_a = get_pipeline_service(
+        "session-a",
+        llm_provider=test_provider,
+    )
+    session_b = get_pipeline_service(
+        "session-b",
+        llm_provider=test_provider,
+    )
+
+
+    session_a.dialogue_service.add_response(
+        user_message="Hello from session A",
+        assistant_message="Response for session A",
+        human_state={},
+        dialogue_strategy="continue",
+    )
+
+    session_b.dialogue_service.add_response(
+        user_message="Hello from session B",
+        assistant_message="Response for session B",
+        human_state={},
+        dialogue_strategy="continue",
+    )
+
+    history_a = session_a.dialogue_service.get_history()
+    history_b = session_b.dialogue_service.get_history()
+
+    assert len(history_a) == 1
+    assert len(history_b) == 1
+
+    assert history_a[0]["user_message"] == "Hello from session A"
+    assert history_a[0]["assistant_message"] == "Response for session A"
+
+    assert history_b[0]["user_message"] == "Hello from session B"
+    assert history_b[0]["assistant_message"] == "Response for session B"
+
+
+def test_session_state_trajectory_is_isolated():
+    sessions.clear()
+
+    test_provider = create_test_provider()
+
+    session_a = get_pipeline_service(
+        "trajectory-a",
+        llm_provider=test_provider,
+    )
+    session_b = get_pipeline_service(
+        "trajectory-b",
+        llm_provider=test_provider,
+    )
+
+    sample_speech = {
+        "transcript": "Test conversation turn.",
+        "audio": {},
+        "features": {},
+        "vad": {},
+    }
+
+    state_a_1 = session_a.human_state_engine.process(sample_speech)
+    state_a_2 = session_a.human_state_engine.process(sample_speech)
+
+    session_b.human_state_engine.process(sample_speech)
+
+    response_a = client.get("/api/v1/session/trajectory-a/state")
+    response_b = client.get("/api/v1/session/trajectory-b/state")
+
+    assert response_a.status_code == 200
+    assert response_b.status_code == 200
+
+    data_a = response_a.json()
+    data_b = response_b.json()
+
+    assert data_a["session_id"] == "trajectory-a"
+    assert data_b["session_id"] == "trajectory-b"
+
+    assert len(data_a["trajectory"]) == 2
+    assert len(data_b["trajectory"]) == 1
+
+    assert data_a["current_state"] == state_a_2.to_dict()
+    assert data_a["trajectory"][0]["step"] == 0
+    assert data_a["trajectory"][1]["step"] == 1
+
+    assert data_b["trajectory"][0]["step"] == 0

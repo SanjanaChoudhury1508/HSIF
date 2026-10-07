@@ -2,10 +2,8 @@ import os
 
 from google import genai
 
-from backend.app.services.llm.provider import LLMProvider
 
-
-class GeminiProvider(LLMProvider):
+class GeminiProvider:
 
     def __init__(
         self,

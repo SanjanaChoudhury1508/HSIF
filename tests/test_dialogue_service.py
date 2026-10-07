@@ -335,4 +335,61 @@ def test_state_transition_recovered():
 
     assert struggling_result["policy"]["strategy"] == "reassure"
     assert recovered_result["dialogue_state"]["interaction_state"] == "confident_engaged"
-    assert recovered_result["policy"]["strategy"] == "continue"    
+    assert recovered_result["policy"]["strategy"] == "continue"   
+    
+def test_high_cognitive_load_produces_adaptive_prompt():
+    service = DialogueService()
+
+    result = service.process(
+        user_message="I am having trouble following all of these steps.",
+        human_state=make_human_state(
+            emotion="neutral",
+            hesitation=0.6,
+            confidence=0.4,
+            engagement=0.7,
+            cognitive_load=0.9,
+        ),
+    )
+
+    assert result["dialogue_state"]["interaction_state"] == "overloaded"
+    assert result["policy"]["strategy"] == "reduce_information"
+    assert "reduce_information" in result["prompt"]
+
+
+def test_frustrated_user_produces_adaptive_prompt():
+    service = DialogueService()
+
+    result = service.process(
+        user_message="This is frustrating. I still don't understand.",
+        human_state=make_human_state(
+            emotion="frustrated",
+            emotion_score=0.9,
+            hesitation=0.6,
+            confidence=0.4,
+            engagement=0.6,
+            cognitive_load=0.7,
+        ),
+    )
+
+    assert result["dialogue_state"]["emotion"] == "frustrated"
+    assert result["policy"]["strategy"] == "acknowledge_frustration"
+    assert "acknowledge_frustration" in result["prompt"]
+
+
+def test_confident_engaged_user_produces_continue_prompt():
+    service = DialogueService()
+
+    result = service.process(
+        user_message="I understand. Let's move on to the next concept.",
+        human_state=make_human_state(
+            emotion="neutral",
+            hesitation=0.1,
+            confidence=0.9,
+            engagement=0.9,
+            cognitive_load=0.2,
+        ),
+    )
+
+    assert result["dialogue_state"]["interaction_state"] == "confident_engaged"
+    assert result["policy"]["strategy"] == "continue"
+    assert "continue" in result["prompt"]

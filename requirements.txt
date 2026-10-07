@@ -53,3 +53,6 @@ typing_extensions==4.16.0
 urllib3==2.7.0
 uvicorn==0.52.3
 google-genai==2.18.1
+psycopg==3.3.6
+psycopg-binary==3.3.6
+SQLAlchemy==2.1.1

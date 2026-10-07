@@ -1,22 +1,29 @@
 from pathlib import Path
 
-import pytest
-
+from ai.speech.preprocessing.audio_processor import AudioProcessor
 from ai.speech.whisper.transcriber import SpeechTranscriber
 
 
-AUDIO_PATH = Path("tests/audio/sample.wav")
-
-
 def test_transcription():
-    if not AUDIO_PATH.exists():
-        pytest.skip("Local audio fixture sample.wav is not available.")
+    input_path = Path("tests/audio/recording.m4a")
+    processed_path = Path("tests/audio/test_transcription_processed.wav")
 
-    transcriber = SpeechTranscriber()
+    processor = AudioProcessor()
+    processor.convert_to_wav(input_path, processed_path)
 
-    result = transcriber.transcribe(str(AUDIO_PATH))
+    try:
+        transcriber = SpeechTranscriber()
+        result = transcriber.transcribe(processed_path)
 
-    assert isinstance(result, dict)
-    assert "text" in result
-    assert "language" in result
-    assert "language_probability" in result
+        assert isinstance(result, dict)
+        assert isinstance(result["text"], str)
+        assert result["text"].strip()
+
+        assert isinstance(result["language"], str)
+        assert result["language"].strip()
+
+        assert 0 <= result["language_probability"] <= 1
+
+    finally:
+        if processed_path.exists():
+            processed_path.unlink()
