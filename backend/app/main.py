@@ -1,7 +1,9 @@
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api.process import router as process_router
+from backend.app.api.streaming import router as streaming_router
 
 app = FastAPI(
     title="HSIF Backend",
@@ -30,7 +32,11 @@ def health():
     }
 
 
+# Existing REST API — preserve it.
 app.include_router(
     process_router,
     prefix="/api/v1"
 )
+
+# New WebSocket endpoint — additive to the REST API.
+app.include_router(streaming_router)

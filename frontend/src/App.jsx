@@ -1,4 +1,6 @@
+
 import { useState } from "react";
+import LiveMicrophone from "./components/LiveMicrophone";
 
 const API_BASE_URL = "http://localhost:8000/api/v1";
 
@@ -67,11 +69,16 @@ function App() {
   return (
     <div style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
       <h1>HSIF</h1>
-
       <p>Human State Intelligence Framework</p>
 
       <hr />
 
+      {/* Review 3: live microphone over WebSocket */}
+      <LiveMicrophone />
+
+      <hr />
+
+      {/* Review 2: existing REST audio-upload pipeline */}
       <h2>Process Audio</h2>
 
       <p>
@@ -81,7 +88,9 @@ function App() {
       <input
         type="file"
         accept=".wav,.mp3,.m4a,.ogg,.flac,.aac"
-        onChange={(event) => setAudioFile(event.target.files[0])}
+        onChange={(event) =>
+          setAudioFile(event.target.files?.[0] ?? null)
+        }
       />
 
       <br />
@@ -92,7 +101,7 @@ function App() {
       </button>
 
       {error && (
-        <p style={{ color: "red" }}>
+        <p style={{ color: "red" }} role="alert">
           Error: {error}
         </p>
       )}
@@ -102,46 +111,35 @@ function App() {
           <hr />
 
           <h2>Transcript</h2>
-
           <p>{result.speech?.transcript}</p>
 
           <h2>Current Human State</h2>
-
           <ul>
             <li>
               Emotion: {result.human_state?.emotion?.label} (
               {result.human_state?.emotion?.score})
             </li>
-
             <li>
               Hesitation: {result.human_state?.hesitation?.score}
             </li>
-
             <li>
               Confidence: {result.human_state?.confidence?.score}
             </li>
-
             <li>
               Engagement: {result.human_state?.engagement?.score}
             </li>
-
             <li>
               Cognitive Load: {result.human_state?.cognitive_load?.score}
             </li>
           </ul>
 
           <h2>Dialogue Strategy</h2>
-
           <p>
-            <strong>
-              {result.dialogue?.policy?.strategy}
-            </strong>
+            <strong>{result.dialogue?.policy?.strategy}</strong>
           </p>
-
           <p>{result.dialogue?.policy?.reason}</p>
 
           <h2>AI Response</h2>
-
           <p>{result.response}</p>
 
           <h2>Conversation History</h2>
@@ -152,11 +150,9 @@ function App() {
                 <p>
                   <strong>User:</strong> {turn.user_message}
                 </p>
-
                 <p>
                   <strong>Assistant:</strong> {turn.assistant_message}
                 </p>
-
                 <hr />
               </div>
             ))
@@ -171,7 +167,6 @@ function App() {
           <hr />
 
           <h2>Human State Trajectory</h2>
-
           <p>
             Total recorded states:{" "}
             <strong>{sessionState.trajectory?.length || 0}</strong>
@@ -180,28 +175,14 @@ function App() {
           {sessionState.trajectory?.map((state) => (
             <div key={state.step} style={{ marginBottom: "20px" }}>
               <h3>Turn {state.step}</h3>
-
               <ul>
                 <li>
-                   Emotion: {state.emotion?.label} (
-                   {state.emotion?.score})
+                  Emotion: {state.emotion?.label} ({state.emotion?.score})
                 </li>
-
-                <li>
-                  Hesitation: {state.hesitation}
-                </li>
-
-                <li>
-                  Confidence: {state.confidence}
-                </li>
-
-                <li>
-                  Engagement: {state.engagement}
-                </li>
-
-                <li>
-                  Cognitive Load: {state.cognitive_load}
-                </li>
+                <li>Hesitation: {state.hesitation}</li>
+                <li>Confidence: {state.confidence}</li>
+                <li>Engagement: {state.engagement}</li>
+                <li>Cognitive Load: {state.cognitive_load}</li>
               </ul>
             </div>
           ))}
@@ -216,7 +197,6 @@ function App() {
                     Turn {change.from_step} → Turn {change.to_step}
                   </strong>
                 </p>
-
                 <pre>
                   {JSON.stringify(change.changes, null, 2)}
                 </pre>
