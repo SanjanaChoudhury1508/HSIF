@@ -94,3 +94,9 @@ class ProcessResponse(BaseModel):
     human_state: HumanStateResponse
     dialogue: DialogueResponse
     response: str
+    
+class HumanStateTrajectoryResponse(BaseModel):
+    session_id: str
+    current_state: HumanStateResponse | None
+    trajectory: list[dict]
+    changes: list[dict]

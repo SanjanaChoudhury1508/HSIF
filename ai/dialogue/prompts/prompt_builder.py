@@ -162,6 +162,57 @@ class PromptBuilder:
         else:
             history = "No previous conversation."
 
+        strategy_guidelines = {
+            "normal_response": (
+                "Respond naturally and directly to the user's request."
+            ),
+            "clarify": (
+                "Clarify the user's confusion and explain the concept "
+                "clearly before moving forward."
+            ),
+            "simplify": (
+                "Use simpler language, reduce complexity, and explain "
+                "one idea at a time."
+            ),
+            "reassure": (
+                "Reassure the user that difficulty is okay, then explain "
+                "the concept in a supportive and simple way."
+            ),
+            "encourage": (
+                "Use a supportive and encouraging tone that helps the "
+                "user continue."
+            ),
+            "slow_down": (
+                "Slow the explanation down and present information "
+                "step by step."
+            ),
+            "ask_follow_up": (
+                "Ask a focused follow-up question to resolve ambiguity "
+                "before giving a detailed answer."
+            ),
+            "reduce_information": (
+                "Give only the most important information and avoid "
+                "unnecessary details."
+            ),
+            "acknowledge_frustration": (
+                "Acknowledge the user's frustration briefly, then "
+                "focus on resolving the problem."
+            ),
+            "re_engage": (
+                "Keep the response concise and engaging to help regain "
+                "the user's attention."
+            ),
+            "continue": (
+                "Continue naturally with an appropriately detailed "
+                "response."
+            ),
+        }
+
+        strategy_instruction = strategy_guidelines.get(
+            strategy,
+            "Respond naturally while adapting to the user's current state.",
+        )
+
         prompt = f"""You are a conversational AI assistant.
 
 Your goal is to respond helpfully while adapting to the user's
@@ -188,6 +239,7 @@ RECENT CONVERSATION:
 
 RESPONSE GUIDELINES:
 - Follow the recommended dialogue strategy.
+- Strategy-specific instruction: {strategy_instruction}
 - Adapt the response to the user's current state.
 - If the user appears confused, explain clearly.
 - If cognitive load is high, avoid unnecessary complexity.

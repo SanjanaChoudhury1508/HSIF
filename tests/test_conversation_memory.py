@@ -117,4 +117,43 @@ def test_conversation_turn_to_dict():
     assert result == {
         "user_message": "Hello",
         "assistant_message": "Hi!",
+        "dialogue_strategy": None,
+        "human_state": None
     }
+
+
+def test_turn_stores_human_state_and_dialogue_strategy():
+    memory = ConversationMemory()
+
+    human_state = {
+        "emotion": "confused",
+        "confidence": 0.3,
+        "engagement": 0.6,
+        "cognitive_load": 0.8,
+    }
+
+    memory.add_turn(
+        "I don't understand this.",
+        "Let me explain it more simply.",
+        human_state=human_state,
+        dialogue_strategy="simplify",
+    )
+
+    history = memory.get_history()
+
+    assert history[0]["human_state"] == human_state
+    assert history[0]["dialogue_strategy"] == "simplify"
+
+
+def test_turn_defaults_state_and_strategy_to_none():
+    memory = ConversationMemory()
+
+    memory.add_turn(
+        "Hello",
+        "Hi!",
+    )
+
+    history = memory.get_history()
+
+    assert history[0]["human_state"] is None
+    assert history[0]["dialogue_strategy"] is None

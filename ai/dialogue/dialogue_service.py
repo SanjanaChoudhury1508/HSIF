@@ -98,6 +98,8 @@ class DialogueService:
         self,
         user_message: str,
         assistant_message: str,
+        human_state: Mapping[str, Any] | None = None,
+        dialogue_strategy: str | None = None,
     ) -> None:
         """
         Store the completed user-assistant interaction.
@@ -109,6 +111,8 @@ class DialogueService:
         self.memory.add_turn(
             user_message=user_message,
             assistant_message=assistant_message,
+            human_state=human_state,
+            dialogue_strategy=dialogue_strategy,
         )
 
     def get_history(self):

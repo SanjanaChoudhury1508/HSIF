@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: hsif-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hsif
+      POSTGRES_USER: hsif
+      POSTGRES_PASSWORD: hsif
+    ports:
+      - "5434:5432"
+    volumes:
+      - hsif_postgres_data:/var/lib/postgresql
+
+volumes:
+  hsif_postgres_data:

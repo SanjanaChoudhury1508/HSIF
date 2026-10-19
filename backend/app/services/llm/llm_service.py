@@ -1,14 +1,10 @@
-from backend.app.services.llm.provider import LLMProvider
-from backend.app.services.llm.mock_provider import MockLLMProvider
+from backend.app.services.llm.gemini_provider import GeminiProvider
 
 
 class LLMService:
 
-    def __init__(
-        self,
-        provider: LLMProvider | None = None,
-    ):
-        self.provider = provider or MockLLMProvider()
+    def __init__(self, provider=None):
+        self.provider = provider or GeminiProvider()
 
     def generate(self, prompt: str) -> str:
         if not isinstance(prompt, str):

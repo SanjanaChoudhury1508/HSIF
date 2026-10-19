@@ -186,3 +186,75 @@ def test_confused_state_can_trigger_clarification():
     result = DialoguePolicy.decide_to_dict(state)
 
     assert result["strategy"] == "clarify"
+
+def test_high_hesitation_low_confidence_returns_reassure():
+    state = make_dialogue_state(
+        hesitation=0.8,
+        confidence=0.3,
+    )
+
+    result = DialoguePolicy.decide_to_dict(state)
+
+    assert result["strategy"] == "reassure"
+    assert result["priority"] == "high"
+
+
+def test_high_hesitation_returns_slow_down():
+    state = make_dialogue_state(
+        hesitation=0.8,
+        confidence=0.7,
+    )
+
+    result = DialoguePolicy.decide_to_dict(state)
+
+    assert result["strategy"] == "slow_down"
+    assert result["priority"] == "medium"
+
+
+def test_high_cognitive_load_returns_reduce_information():
+    state = make_dialogue_state(
+        cognitive_load=0.95,
+        confidence=0.7,
+        interaction_state="overloaded",
+    )
+
+    result = DialoguePolicy.decide_to_dict(state)
+
+    assert result["strategy"] == "reduce_information"
+    assert result["priority"] == "high"
+
+
+def test_frustrated_emotion_returns_acknowledge_frustration():
+    state = make_dialogue_state(
+        emotion="frustrated",
+        emotion_score=0.85,
+    )
+
+    result = DialoguePolicy.decide_to_dict(state)
+
+    assert result["strategy"] == "acknowledge_frustration"
+    assert result["priority"] == "high"
+
+
+def test_low_engagement_returns_reengage():
+    state = make_dialogue_state(
+        engagement=0.2,
+        interaction_state="disengaged",
+    )
+
+    result = DialoguePolicy.decide_to_dict(state)
+
+    assert result["strategy"] == "re_engage"
+    assert result["priority"] == "medium"
+
+
+def test_ambiguous_state_returns_ask_follow_up():
+    state = make_dialogue_state(
+        emotion="uncertain",
+        needs_clarification=True,
+    )
+
+    result = DialoguePolicy.decide_to_dict(state)
+
+    assert result["strategy"] == "ask_follow_up"
+    assert result["priority"] == "medium"

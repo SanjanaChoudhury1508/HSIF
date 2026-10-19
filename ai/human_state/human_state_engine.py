@@ -9,13 +9,14 @@ Input:
 Output:
     HumanState defined in hsr.py.
 
-The engine coordinates all individual estimators without exposing
-their implementation details to the caller.
+The engine coordinates all individual estimators and records
+successive HumanState objects through StateTracker.
 """
 
 from typing import Any, Dict, Mapping
 
 from ai.human_state.hsr import HumanState, build_human_state
+from ai.human_state.state_tracker import StateTracker
 from ai.human_state.emotion.detector import EmotionDetector
 from ai.human_state.hesitation.detector import HesitationDetector
 from ai.human_state.confidence.estimator import ConfidenceEstimator
@@ -25,21 +26,8 @@ from ai.human_state.cognitive_load.estimator import estimate_cognitive_load
 
 class HumanStateEngine:
     """
-    Orchestrates all Human State estimators.
-
-    SpeechResult
-        |
-        +----> Emotion
-        |
-        +----> Hesitation
-        |
-        +----> Confidence
-        |
-        +----> Engagement
-        |
-        +----> Cognitive Load
-        |
-        +----> HumanState
+    Orchestrates all Human State estimators and tracks
+    successive HumanState results.
     """
 
     def __init__(
@@ -48,6 +36,7 @@ class HumanStateEngine:
         hesitation_detector: HesitationDetector | None = None,
         confidence_estimator: ConfidenceEstimator | None = None,
         engagement_estimator: EngagementEstimator | None = None,
+        state_tracker: StateTracker | None = None,
     ) -> None:
         self.emotion_detector = emotion_detector or EmotionDetector()
         self.hesitation_detector = hesitation_detector or HesitationDetector()
@@ -57,17 +46,12 @@ class HumanStateEngine:
         self.engagement_estimator = (
             engagement_estimator or EngagementEstimator()
         )
+        self.state_tracker = state_tracker or StateTracker()
 
     @staticmethod
     def _validate_input(
         speech_result: Mapping[str, Any] | None,
     ) -> Dict[str, Any]:
-        """
-        Validate and normalize the incoming SpeechResult.
-
-        Missing optional sections are replaced with empty dictionaries
-        so individual estimators can safely apply their own defaults.
-        """
         if speech_result is None:
             return {
                 "audio": {},
@@ -98,12 +82,6 @@ class HumanStateEngine:
         value: Any,
         default: float = 0.5,
     ) -> float:
-        """
-        Convert a value into a safe float in the range [0.0, 1.0].
-
-        Invalid, missing, or NaN values fall back to the neutral
-        midpoint.
-        """
         try:
             score = float(value)
         except (TypeError, ValueError):
@@ -120,11 +98,6 @@ class HumanStateEngine:
         result: Any,
         default: float = 0.5,
     ) -> Dict[str, float]:
-        """
-        Normalize an estimator result into:
-
-            {"score": 0.0-1.0}
-        """
         if not isinstance(result, Mapping):
             return {
                 "score": default
@@ -142,14 +115,6 @@ class HumanStateEngine:
         cls,
         result: Any,
     ) -> Dict[str, Any]:
-        """
-        Normalize emotion output into:
-
-            {
-                "label": "...",
-                "score": 0.0-1.0
-            }
-        """
         if not isinstance(result, Mapping):
             return {
                 "label": "neutral",
@@ -176,9 +141,8 @@ class HumanStateEngine:
         speech_result: Mapping[str, Any] | None,
     ) -> HumanState:
         """
-        Process one SpeechResult and return a complete HumanState.
-
-        This is the primary public API of the Human State Engine.
+        Process one SpeechResult, create a HumanState, and
+        automatically record it in the StateTracker.
         """
         speech_result = self._validate_input(speech_result)
 
@@ -222,7 +186,7 @@ class HumanStateEngine:
             cognitive_load_result
         )
 
-        return build_human_state(
+        state = build_human_state(
             emotion_label=emotion["label"],
             emotion_score=emotion["score"],
             hesitation_score=hesitation["score"],
@@ -231,16 +195,33 @@ class HumanStateEngine:
             cognitive_load_score=cognitive_load["score"],
         )
 
+        self.state_tracker.add_state(state)
+
+        return state
+
     def process_to_dict(
         self,
         speech_result: Mapping[str, Any] | None,
     ) -> Dict[str, Any]:
         """
         Process SpeechResult and return a JSON-friendly dictionary.
-
-        Useful for APIs, logging, testing, and dialogue integration.
         """
         return self.process(speech_result).to_dict()
+
+    def get_current_state(self) -> HumanState | None:
+        return self.state_tracker.get_current_state()
+
+    def get_state_history(self) -> list[HumanState]:
+        return self.state_tracker.get_history()
+
+    def get_state_trajectory(self) -> list[Dict[str, Any]]:
+        return self.state_tracker.get_trajectory()
+
+    def get_state_changes(self) -> list[Dict[str, Any]]:
+        return self.state_tracker.get_state_changes()
+
+    def clear_state_history(self) -> None:
+        self.state_tracker.clear()
 
 
 if __name__ == "__main__":

@@ -1,18 +1,18 @@
 
+import asyncio
 import json
 import logging
 import tempfile
 import wave
-
 from pathlib import Path
+from time import perf_counter
 from uuid import UUID
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from starlette.concurrency import run_in_threadpool
 
-from backend.app.api.process import pipeline_service
+from backend.app.api.process import get_pipeline_service
 from ai.speech.streaming.chunk_processor import StreamingAudioProcessor
-
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ async def send_event(websocket, event_type, session_id, **payload):
     await websocket.send_json({
         "type": event_type,
         "session_id": session_id,
-        **payload
+        **payload,
     })
 
 
@@ -45,6 +45,7 @@ async def stream_session(websocket: WebSocket, session_id: str):
     audio_buffer = bytearray()
     processor = StreamingAudioProcessor(sample_rate=SAMPLE_RATE)
     chunk_index = 0
+    turn_id = None
 
     try:
         while True:
@@ -59,7 +60,7 @@ async def stream_session(websocket: WebSocket, session_id: str):
                         websocket, "error", session_id,
                         code="SESSION_NOT_STARTED",
                         message="Send start_session before audio.",
-                        recoverable=False
+                        recoverable=False,
                     )
                     continue
 
@@ -69,22 +70,26 @@ async def stream_session(websocket: WebSocket, session_id: str):
                     audio_buffer.clear()
                     processor.reset()
                     chunk_index = 0
+                    turn_id = None
                     await send_event(
                         websocket, "error", session_id,
                         code="AUDIO_TOO_LARGE",
                         message="Turn exceeds the audio size limit.",
-                        recoverable=True
+                        recoverable=True,
                     )
                     continue
 
                 try:
                     result = processor.process_chunk(chunk)
                 except ValueError as exc:
+                    audio_buffer.clear()
+                    processor.reset()
+                    chunk_index = 0
                     await send_event(
                         websocket, "error", session_id,
                         code="INVALID_PCM",
                         message=str(exc),
-                        recoverable=True
+                        recoverable=True,
                     )
                     continue
 
@@ -98,7 +103,7 @@ async def stream_session(websocket: WebSocket, session_id: str):
                     duration=result["duration"],
                     total_duration=result["total_duration"],
                     speech_duration=result["speech_duration"],
-                    is_speech=result["is_speech"]
+                    is_speech=result["is_speech"],
                 )
                 continue
 
@@ -113,7 +118,7 @@ async def stream_session(websocket: WebSocket, session_id: str):
                     websocket, "error", session_id,
                     code="INVALID_JSON",
                     message="Control message must be valid JSON.",
-                    recoverable=True
+                    recoverable=True,
                 )
                 continue
 
@@ -122,7 +127,7 @@ async def stream_session(websocket: WebSocket, session_id: str):
                     websocket, "error", session_id,
                     code="INVALID_MESSAGE",
                     message="Control message must be a JSON object.",
-                    recoverable=True
+                    recoverable=True,
                 )
                 continue
 
@@ -134,7 +139,7 @@ async def stream_session(websocket: WebSocket, session_id: str):
                         websocket, "error", session_id,
                         code="SESSION_ALREADY_STARTED",
                         message="This connection already has a session.",
-                        recoverable=True
+                        recoverable=True,
                     )
                     continue
 
@@ -148,9 +153,22 @@ async def stream_session(websocket: WebSocket, session_id: str):
                         websocket, "error", session_id,
                         code="INVALID_AUDIO_FORMAT",
                         message="Expected mono 16000 Hz pcm_s16le audio.",
-                        recoverable=False
+                        recoverable=False,
                     )
                     await websocket.close(code=1008)
+                    return
+
+                try:
+                    await run_in_threadpool(get_pipeline_service, session_id)
+                except Exception:
+                    logger.exception("Could not initialize HSIF session")
+                    await send_event(
+                        websocket, "error", session_id,
+                        code="SESSION_INITIALIZATION_FAILED",
+                        message="Could not initialize the HSIF session.",
+                        recoverable=False,
+                    )
+                    await websocket.close(code=1011)
                     return
 
                 session_started = True
@@ -160,8 +178,8 @@ async def stream_session(websocket: WebSocket, session_id: str):
                     audio={
                         "encoding": "pcm_s16le",
                         "sample_rate": SAMPLE_RATE,
-                        "channels": CHANNELS
-                    }
+                        "channels": CHANNELS,
+                    },
                 )
                 continue
 
@@ -170,113 +188,126 @@ async def stream_session(websocket: WebSocket, session_id: str):
                     websocket, "error", session_id,
                     code="SESSION_NOT_STARTED",
                     message="Send start_session first.",
-                    recoverable=True
+                    recoverable=True,
                 )
                 continue
 
             if event_type == "end_turn":
-                turn_id = control.get("turn_id")
-                if not isinstance(turn_id, str) or not turn_id.strip():
+                requested_turn_id = control.get("turn_id")
+                if (
+                    not isinstance(requested_turn_id, str)
+                    or not requested_turn_id.strip()
+                    or len(requested_turn_id) > 100
+                ):
                     await send_event(
                         websocket, "error", session_id,
                         code="INVALID_TURN_ID",
                         message="A non-empty turn_id is required.",
-                        recoverable=True
+                        recoverable=True,
                     )
                     continue
 
                 if not audio_buffer:
                     await send_event(
                         websocket, "error", session_id,
+                        turn_id=requested_turn_id,
                         code="EMPTY_TURN",
-                        turn_id=turn_id,
                         message="No audio was received for this turn.",
-                        recoverable=True
+                        recoverable=True,
                     )
                     processor.reset()
                     chunk_index = 0
                     continue
 
-                if len(audio_buffer) % SAMPLE_WIDTH_BYTES:
+                if len(audio_buffer) % SAMPLE_WIDTH_BYTES != 0:
                     await send_event(
                         websocket, "error", session_id,
+                        turn_id=requested_turn_id,
                         code="INVALID_PCM_LENGTH",
-                        turn_id=turn_id,
                         message="Audio ended in the middle of a PCM sample.",
-                        recoverable=True
+                        recoverable=True,
                     )
                     audio_buffer.clear()
                     processor.reset()
                     chunk_index = 0
                     continue
 
+                turn_id = requested_turn_id
                 pcm_bytes = bytes(audio_buffer)
                 audio_buffer.clear()
+                started_at = perf_counter()
+                wav_path = None
 
-                temp_path = None
                 try:
                     with tempfile.NamedTemporaryFile(
                         suffix=".wav", delete=False
                     ) as temp_file:
-                        temp_path = Path(temp_file.name)
+                        wav_path = Path(temp_file.name)
 
-                    with wave.open(str(temp_path), "wb") as wav_file:
+                    with wave.open(str(wav_path), "wb") as wav_file:
                         wav_file.setnchannels(CHANNELS)
                         wav_file.setsampwidth(SAMPLE_WIDTH_BYTES)
                         wav_file.setframerate(SAMPLE_RATE)
                         wav_file.writeframes(pcm_bytes)
 
+                    pipeline = await run_in_threadpool(
+                        get_pipeline_service, session_id
+                    )
                     result = await run_in_threadpool(
-                        pipeline_service.process_audio, temp_path
-                    )
-
-                    await send_event(
-                        websocket, "transcript_final", session_id,
-                        turn_id=turn_id,
-                        text=result["speech"]["transcript"]
-                    )
-                    await send_event(
-                        websocket, "human_state_update", session_id,
-                        turn_id=turn_id,
-                        state=result["human_state"],
-                        final=True
+                        pipeline.process_audio, str(wav_path)
                     )
 
                     dialogue = result["dialogue"]
                     policy = dialogue.get("policy", {})
 
                     await send_event(
+                        websocket, "transcript_final", session_id,
+                        turn_id=turn_id,
+                        text=result["speech"]["transcript"],
+                    )
+                    await send_event(
+                        websocket, "human_state_update", session_id,
+                        turn_id=turn_id,
+                        state=result["human_state"],
+                        final=True,
+                    )
+                    await send_event(
                         websocket, "dialogue_strategy", session_id,
                         turn_id=turn_id,
                         strategy=policy.get("strategy"),
-                        reason=policy.get("reason")
+                        reason=policy.get("reason"),
                     )
                     await send_event(
                         websocket, "assistant_response", session_id,
                         turn_id=turn_id,
                         text=result["response"],
-                        strategy=policy.get("strategy")
+                        strategy=policy.get("strategy"),
+                        latency_ms=round(
+                            (perf_counter() - started_at) * 1000
+                        ),
                     )
 
                 except Exception:
-                    logger.exception("Streaming turn failed")
+                    logger.exception("HSIF turn processing failed: %s", turn_id)
                     await send_event(
                         websocket, "error", session_id,
                         turn_id=turn_id,
                         code="PIPELINE_FAILED",
                         message="The turn could not be processed.",
-                        recoverable=True
+                        recoverable=True,
                     )
                 finally:
-                    if temp_path is not None:
-                        temp_path.unlink(missing_ok=True)
+                    if wav_path is not None:
+                        wav_path.unlink(missing_ok=True)
                     processor.reset()
                     chunk_index = 0
+                    turn_id = None
 
                 continue
 
             if event_type == "end_session":
                 audio_buffer.clear()
+                processor.reset()
                 await send_event(websocket, "session_ended", session_id)
                 await websocket.close(code=1000)
                 return
@@ -289,10 +320,22 @@ async def stream_session(websocket: WebSocket, session_id: str):
                 websocket, "error", session_id,
                 code="UNKNOWN_EVENT",
                 message=f"Unsupported event type: {event_type}",
-                recoverable=True
+                recoverable=True,
             )
 
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected: %s", session_id)
     except Exception:
         logger.exception("Unexpected streaming error: %s", session_id)
+        try:
+            await send_event(
+                websocket, "error", session_id,
+                code="INTERNAL_ERROR",
+                message="Unexpected streaming server error.",
+                recoverable=False,
+            )
+        except Exception:
+            pass
+    finally:
+        audio_buffer.clear()
+        processor.reset()
