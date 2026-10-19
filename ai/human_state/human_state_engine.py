@@ -139,6 +139,9 @@ class HumanStateEngine:
     def process(
         self,
         speech_result: Mapping[str, Any] | None,
+        *,
+        timestamp: float | None = None,
+        observation_valid: bool = True,
     ) -> HumanState:
         """
         Process one SpeechResult, create a HumanState, and
@@ -193,6 +196,8 @@ class HumanStateEngine:
             confidence_score=confidence["score"],
             engagement_score=engagement["score"],
             cognitive_load_score=cognitive_load["score"],
+            timestamp=timestamp,
+            observation_valid=observation_valid,
         )
 
         self.state_tracker.add_state(state)
@@ -202,11 +207,18 @@ class HumanStateEngine:
     def process_to_dict(
         self,
         speech_result: Mapping[str, Any] | None,
+        *,
+        timestamp: float | None = None,
+        observation_valid: bool = True,
     ) -> Dict[str, Any]:
         """
-        Process SpeechResult and return a JSON-friendly dictionary.
+        Process SpeechResult and return the stable HSR dictionary.
         """
-        return self.process(speech_result).to_dict()
+        return self.process(
+            speech_result,
+            timestamp=timestamp,
+            observation_valid=observation_valid,
+        ).to_dict()
 
     def get_current_state(self) -> HumanState | None:
         return self.state_tracker.get_current_state()

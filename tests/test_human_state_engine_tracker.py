@@ -123,3 +123,44 @@ def test_custom_tracker_is_used():
 
     assert engine.state_tracker is tracker
     assert len(tracker.get_history()) == 1
+
+
+def test_engine_passes_temporal_inputs_to_tracked_state():
+    engine = HumanStateEngine()
+
+    state = engine.process(
+        make_speech_result(),
+        timestamp=10.5,
+        observation_valid=False,
+    )
+
+    assert state.timestamp == 10.5
+    assert state.observation_valid is False
+    assert engine.get_current_state() is state
+
+
+def test_engine_process_to_dict_preserves_five_field_hsr():
+    engine = HumanStateEngine()
+
+    result = engine.process_to_dict(
+        make_speech_result(),
+        timestamp=10.5,
+        observation_valid=True,
+    )
+
+    assert set(result) == {
+        "emotion",
+        "hesitation",
+        "confidence",
+        "engagement",
+        "cognitive_load",
+    }
+
+
+def test_engine_accepts_calls_without_temporal_inputs():
+    engine = HumanStateEngine()
+
+    state = engine.process(make_speech_result())
+
+    assert state.timestamp is None
+    assert state.observation_valid is True
