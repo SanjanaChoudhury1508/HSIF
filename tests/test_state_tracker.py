@@ -1,3 +1,4 @@
+import pytest
 from ai.human_state.hsr import (
     EmotionResult,
     ScoreResult,
@@ -173,3 +174,59 @@ def test_negative_threshold_raises_error():
         assert False
     except ValueError:
         assert True
+def test_tracker_records_timestamp_and_observation_validity():
+    tracker = StateTracker()
+    state = make_state()
+
+    state.timestamp = 10.0
+    state.observation_valid = True
+    tracker.add_state(state)
+
+    trajectory = tracker.get_trajectory()
+
+    assert trajectory[0]["timestamp"] == 10.0
+    assert trajectory[0]["observation_valid"] is True
+
+
+def test_tracker_reports_elapsed_time_between_states():
+    tracker = StateTracker()
+
+    first = make_state()
+    first.timestamp = 10.0
+
+    second = make_state(engagement=0.4)
+    second.timestamp = 12.5
+
+    tracker.add_state(first)
+    tracker.add_state(second)
+
+    changes = tracker.get_state_changes()
+
+    assert changes[0]["elapsed_seconds"] == 2.5
+
+
+def test_tracker_rejects_decreasing_timestamps():
+    tracker = StateTracker()
+
+    first = make_state()
+    first.timestamp = 10.0
+    tracker.add_state(first)
+
+    second = make_state()
+    second.timestamp = 9.0
+
+    with pytest.raises(ValueError, match="non-decreasing"):
+        tracker.add_state(second)
+
+
+def test_invalid_observation_does_not_generate_state_changes():
+    tracker = StateTracker()
+
+    first = make_state(engagement=0.2)
+    second = make_state(engagement=0.9)
+    second.observation_valid = False
+
+    tracker.add_state(first)
+    tracker.add_state(second)
+
+    assert tracker.get_state_changes() == []
