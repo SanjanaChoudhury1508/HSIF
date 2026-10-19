@@ -1,15 +1,10 @@
-import io
-
-import librosa
 import numpy as np
 
 
 class StreamingAudioProcessor:
     """
-    Processes progressively received audio chunks.
-
-    Each chunk is converted into mono 16 kHz audio and passed
-    through a lightweight energy-based VAD.
+    Processes raw mono, 16 kHz, signed 16-bit PCM audio chunks.
+    Uses an energy threshold for basic speech detection.
     """
 
     def __init__(
@@ -23,13 +18,7 @@ class StreamingAudioProcessor:
         self.total_speech_duration = 0.0
 
     def process_chunk(self, audio_bytes):
-        """
-        Process one audio chunk.
-
-        Returns:
-            dict containing chunk duration, speech status,
-            and cumulative speech/audio duration.
-        """
+        """Process one raw PCM audio chunk."""
 
         if not audio_bytes:
             return {
@@ -39,13 +28,17 @@ class StreamingAudioProcessor:
                 "total_duration": self.total_audio_duration
             }
 
-        audio, _ = librosa.load(
-            io.BytesIO(audio_bytes),
-            sr=self.sample_rate,
-            mono=True
-        )
+        if len(audio_bytes) % 2 != 0:
+            raise ValueError(
+                "PCM audio must contain complete 16-bit samples."
+            )
 
-        if len(audio) == 0:
+        audio = np.frombuffer(
+            audio_bytes,
+            dtype="<i2"
+        ).astype(np.float32) / 32768.0
+
+        if audio.size == 0:
             return {
                 "duration": 0.0,
                 "is_speech": False,
@@ -53,9 +46,8 @@ class StreamingAudioProcessor:
                 "total_duration": self.total_audio_duration
             }
 
-        duration = len(audio) / self.sample_rate
+        duration = audio.size / self.sample_rate
         energy = float(np.sqrt(np.mean(audio ** 2)))
-
         is_speech = energy > self.energy_threshold
 
         self.total_audio_duration += duration
@@ -75,20 +67,19 @@ class StreamingAudioProcessor:
         audio_bytes,
         transcribe_chunk=None
     ):
-        """
-        Process an audio chunk and optionally generate
-        a partial transcript using a supplied transcription function.
-        """
+        """Process a chunk and optionally obtain a partial transcript."""
 
         result = self.process_chunk(audio_bytes)
-
         partial_transcript = ""
 
-        if transcribe_chunk is not None and audio_bytes:
+        if (
+            transcribe_chunk is not None
+            and audio_bytes
+            and result["duration"] > 0
+        ):
             partial_transcript = transcribe_chunk(audio_bytes)
 
         result["partial_transcript"] = partial_transcript
-
         return result
 
     def reset(self):
