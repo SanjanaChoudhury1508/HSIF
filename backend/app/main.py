@@ -28,15 +28,15 @@ app.add_middleware(
 def health():
     return {
         "status": "ok",
-        "service": "HSIF Backend"
+        "service": "HSIF Backend",
     }
 
 
-# Existing REST API — preserve it.
+# Existing REST API.
 app.include_router(
     process_router,
-    prefix="/api/v1"
+    prefix="/api/v1",
 )
 
-# New WebSocket endpoint — additive to the REST API.
+# WebSocket endpoint: /ws/session/{session_id}
 app.include_router(streaming_router)
