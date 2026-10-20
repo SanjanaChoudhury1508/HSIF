@@ -1,4 +1,7 @@
+
 from pathlib import Path
+
+import pytest
 
 from ai.speech.preprocessing.audio_processor import AudioProcessor
 from ai.speech.whisper.transcriber import SpeechTranscriber
@@ -7,6 +10,9 @@ from ai.speech.whisper.transcriber import SpeechTranscriber
 def test_transcription():
     input_path = Path("tests/audio/recording.m4a")
     processed_path = Path("tests/audio/test_transcription_processed.wav")
+
+    if not input_path.exists():
+        pytest.skip("Audio fixture recording.m4a is not available")
 
     processor = AudioProcessor()
     processor.convert_to_wav(input_path, processed_path)

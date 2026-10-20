@@ -16,6 +16,9 @@ class PolicyDecision:
     strategy: str
     reason: str
     priority: str
+    response_style: str = "natural"
+    complexity: str = "moderate"
+    detail_level: str = "moderate"
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert the policy decision into a JSON-friendly dictionary."""
@@ -23,12 +26,7 @@ class PolicyDecision:
 
 
 class DialoguePolicy:
-    """
-    Rule-based Dialogue Policy Engine.
-
-    Takes the output of StateFusion and recommends
-    how the AI should respond.
-    """
+    """Rule-based Dialogue Policy Engine."""
 
     @staticmethod
     def _get_bool(
@@ -39,15 +37,9 @@ class DialoguePolicy:
         return bool(state.get(field, False))
 
     @staticmethod
-    def _get_state(
-        state: Mapping[str, Any],
-    ) -> str:
+    def _get_state(state: Mapping[str, Any]) -> str:
         """Safely extract the interaction state."""
-
-        value = state.get(
-            "interaction_state",
-            "neutral",
-        )
+        value = state.get("interaction_state", "neutral")
 
         if not isinstance(value, str):
             return "neutral"
@@ -58,31 +50,19 @@ class DialoguePolicy:
             "neutral",
             "struggling",
             "overloaded",
+            "overloaded_uncertain",
             "disengaged",
             "confident_engaged",
         }
 
-        if value not in valid_states:
-            return "neutral"
-
-        return value
+        return value if value in valid_states else "neutral"
 
     @classmethod
     def decide(
         cls,
         dialogue_state: Mapping[str, Any] | None,
     ) -> PolicyDecision:
-        """
-        Generate a response strategy from a fused DialogueState.
-
-        Priority order:
-
-        1. Overloaded
-        2. Struggling
-        3. Disengaged
-        4. Confident and engaged
-        5. Neutral
-        """
+        """Generate a response strategy from a fused DialogueState."""
 
         if dialogue_state is None:
             dialogue_state = {}
@@ -92,18 +72,12 @@ class DialoguePolicy:
                 "dialogue_state must be a dictionary-like Mapping."
             )
 
-        interaction_state = cls._get_state(
-            dialogue_state
-        )
-
+        interaction_state = cls._get_state(dialogue_state)
         needs_clarification = cls._get_bool(
-            dialogue_state,
-            "needs_clarification",
+            dialogue_state, "needs_clarification"
         )
-
         needs_encouragement = cls._get_bool(
-            dialogue_state,
-            "needs_encouragement",
+            dialogue_state, "needs_encouragement"
         )
 
         emotion = dialogue_state.get("emotion", "neutral")
@@ -120,49 +94,91 @@ class DialoguePolicy:
             confidence = float(confidence)
             cognitive_load = float(cognitive_load)
         except (TypeError, ValueError):
-            hesitation = 0.5
-            confidence = 0.5
-            cognitive_load = 0.5
+            hesitation = confidence = cognitive_load = 0.5
 
-        # Strong frustration should be acknowledged before
-        # applying a generic conversational strategy.
+        # Acknowledge frustration before applying generic strategies.
         if emotion == "frustrated":
             return PolicyDecision(
                 strategy="acknowledge_frustration",
                 reason="The user appears to be frustrated.",
                 priority="high",
+                response_style="empathetic",
+                complexity="simple",
+                detail_level="minimal",
             )
 
-        # High hesitation combined with low confidence suggests
-        # that reassurance may help the user continue.
+        # High hesitation and low confidence call for reassurance.
         if hesitation >= 0.7 and confidence <= 0.45:
             return PolicyDecision(
                 strategy="reassure",
-                reason="High hesitation and low confidence suggest that reassurance may help.",
+                reason=(
+                    "High hesitation and low confidence suggest "
+                    "that reassurance may help."
+                ),
                 priority="high",
+                response_style="supportive",
+                complexity="simple",
+                detail_level="moderate",
             )
 
-        # High hesitation without low confidence suggests that
-        # the conversation should proceed more slowly.
+        if (
+            interaction_state == "overloaded_uncertain"
+            and confidence <= 0.35
+        ):
+            return PolicyDecision(
+                strategy="simplify",
+                reason=(
+                    "High cognitive load and very low confidence suggest "
+                    "that a simpler, supportive explanation may help."
+                ),
+                priority="high",
+                response_style="supportive",
+                complexity="simple",
+                detail_level="minimal",
+            )
+
+        # Very high cognitive load requires less information.
+        if (
+            interaction_state in {"overloaded", "overloaded_uncertain"}
+            and cognitive_load >= 0.9
+        ):
+            return PolicyDecision(
+                strategy="reduce_information",
+                reason=(
+                    "The user's cognitive load appears very high, "
+                    "so the amount of information should be reduced."
+                ),
+                priority="high",
+                response_style=(
+                    "supportive"
+                    if interaction_state == "overloaded_uncertain"
+                    else "concise"
+                ),
+                complexity="simple",
+                detail_level="minimal",
+            )
+
+        # High hesitation calls for a slower explanation.
         if hesitation >= 0.7:
             return PolicyDecision(
                 strategy="slow_down",
-                reason="The user's hesitation suggests that the conversation may need to proceed more slowly.",
+                reason=(
+                    "The user's hesitation suggests that the "
+                    "conversation may need to proceed more slowly."
+                ),
                 priority="medium",
+                response_style="calm",
+                complexity="simple",
+                detail_level="moderate",
             )
-
         if interaction_state == "overloaded":
-            if cognitive_load >= 0.9:
-                return PolicyDecision(
-                    strategy="reduce_information",
-                    reason="The user's cognitive load appears very high, so the amount of information should be reduced.",
-                    priority="high",
-                )
-
             return PolicyDecision(
                 strategy="simplify",
                 reason="The user may be experiencing high cognitive load.",
                 priority="high",
+                response_style="clear",
+                complexity="simple",
+                detail_level="moderate",
             )
 
         if interaction_state == "struggling":
@@ -170,6 +186,9 @@ class DialoguePolicy:
                 strategy="clarify",
                 reason="The user appears to be struggling with the interaction.",
                 priority="high",
+                response_style="patient",
+                complexity="simple",
+                detail_level="moderate",
             )
 
         if interaction_state == "disengaged":
@@ -177,6 +196,9 @@ class DialoguePolicy:
                 strategy="re_engage",
                 reason="The user's engagement appears low.",
                 priority="medium",
+                response_style="engaging",
+                complexity="moderate",
+                detail_level="minimal",
             )
 
         if interaction_state == "confident_engaged":
@@ -184,20 +206,32 @@ class DialoguePolicy:
                 strategy="continue",
                 reason="The user appears confident and engaged.",
                 priority="low",
+                response_style="natural",
+                complexity="advanced",
+                detail_level="detailed",
             )
 
         if needs_clarification:
             if emotion == "uncertain":
                 return PolicyDecision(
                     strategy="ask_follow_up",
-                    reason="The user's state suggests uncertainty, so a follow-up question may help clarify their intent.",
+                    reason=(
+                        "The user's state suggests uncertainty, so a "
+                        "follow-up question may help clarify their intent."
+                    ),
                     priority="medium",
+                    response_style="curious",
+                    complexity="simple",
+                    detail_level="minimal",
                 )
 
             return PolicyDecision(
                 strategy="clarify",
                 reason="The fused state indicates that clarification may help.",
                 priority="medium",
+                response_style="clear",
+                complexity="simple",
+                detail_level="moderate",
             )
 
         if needs_encouragement:
@@ -205,12 +239,18 @@ class DialoguePolicy:
                 strategy="encourage",
                 reason="The user may benefit from additional encouragement.",
                 priority="medium",
+                response_style="encouraging",
+                complexity="simple",
+                detail_level="moderate",
             )
 
         return PolicyDecision(
             strategy="normal_response",
             reason="No special dialogue adaptation is required.",
             priority="low",
+            response_style="natural",
+            complexity="moderate",
+            detail_level="moderate",
         )
 
     @classmethod
@@ -219,7 +259,6 @@ class DialoguePolicy:
         dialogue_state: Mapping[str, Any] | None,
     ) -> Dict[str, Any]:
         """Generate a policy decision as a JSON-friendly dictionary."""
-
         return cls.decide(dialogue_state).to_dict()
 
 
@@ -236,8 +275,4 @@ if __name__ == "__main__":
         "needs_encouragement": True,
     }
 
-    print(
-        DialoguePolicy.decide_to_dict(
-            example_state
-        )
-    )
+    print(DialoguePolicy.decide_to_dict(example_state))

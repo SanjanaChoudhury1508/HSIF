@@ -112,6 +112,27 @@ class PromptBuilder:
                 "low",
             )
         ) or "low"
+        response_style = cls._safe_text(
+            policy_decision.get(
+                "response_style",
+                "natural",
+            )
+        ) or "natural"
+
+        complexity = cls._safe_text(
+            policy_decision.get(
+                "complexity",
+                "moderate",
+            )
+        ) or "moderate"
+
+        detail_level = cls._safe_text(
+            policy_decision.get(
+                "detail_level",
+                "moderate",
+            )
+        ) or "moderate"
+
 
         confidence = dialogue_state.get(
             "confidence",
@@ -233,12 +254,19 @@ DIALOGUE POLICY:
 - Strategy: {strategy}
 - Priority: {priority}
 - Reason: {reason}
+- Response style: {response_style}
+- Explanation complexity: {complexity}
+- Detail level: {detail_level}
 
 RECENT CONVERSATION:
 {history}
 
 RESPONSE GUIDELINES:
 - Follow the recommended dialogue strategy.
+- Match the requested response style.
+- Match the specified explanation complexity and detail level.
+- If detail level is minimal, focus on the essential information and avoid unnecessary elaboration.
+- If complexity is simple, prefer familiar words and explain one idea at a time.
 - Strategy-specific instruction: {strategy_instruction}
 - Adapt the response to the user's current state.
 - If the user appears confused, explain clearly.

@@ -1,3 +1,4 @@
+
 import pytest
 
 from ai.dialogue.policy.dialogue_policy import (
@@ -86,6 +87,34 @@ def test_disengaged_state_returns_reengage():
     assert result["priority"] == "medium"
 
 
+def test_ambiguous_state_returns_ask_follow_up():
+    state = make_dialogue_state(
+        emotion="uncertain",
+        needs_clarification=True,
+    )
+
+    result = DialoguePolicy.decide_to_dict(state)
+
+    assert result["strategy"] == "ask_follow_up"
+    assert result["priority"] == "medium"
+
+
+def test_overloaded_uncertain_state_returns_simplify():
+    state = make_dialogue_state(
+        confidence=0.3,
+        cognitive_load=0.9,
+        interaction_state="overloaded_uncertain",
+        needs_clarification=True,
+        needs_encouragement=True,
+    )
+
+    result = DialoguePolicy.decide_to_dict(state)
+
+    assert result["strategy"] == "simplify"
+    assert result["priority"] == "high"
+    assert "confidence" in result["reason"].lower()
+
+
 def test_confident_engaged_state_returns_continue():
     state = make_dialogue_state(
         interaction_state="confident_engaged",
@@ -162,6 +191,9 @@ def test_policy_result_contains_required_fields():
         "strategy",
         "reason",
         "priority",
+        "complexity",
+        "response_style",
+        "detail_level",
     }
 
 
@@ -186,6 +218,7 @@ def test_confused_state_can_trigger_clarification():
     result = DialoguePolicy.decide_to_dict(state)
 
     assert result["strategy"] == "clarify"
+
 
 def test_high_hesitation_low_confidence_returns_reassure():
     state = make_dialogue_state(
@@ -245,16 +278,4 @@ def test_low_engagement_returns_reengage():
     result = DialoguePolicy.decide_to_dict(state)
 
     assert result["strategy"] == "re_engage"
-    assert result["priority"] == "medium"
-
-
-def test_ambiguous_state_returns_ask_follow_up():
-    state = make_dialogue_state(
-        emotion="uncertain",
-        needs_clarification=True,
-    )
-
-    result = DialoguePolicy.decide_to_dict(state)
-
-    assert result["strategy"] == "ask_follow_up"
     assert result["priority"] == "medium"

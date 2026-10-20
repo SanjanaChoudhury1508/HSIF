@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from backend.app.main import app
 from backend.app.api.process import sessions, get_pipeline_service
+from backend.app.api import process as process_api
 
 client = TestClient(app)
 
@@ -15,6 +16,21 @@ def create_test_provider():
     provider = Mock()
     provider.generate.return_value = "Test AI response."
     return provider
+
+
+@pytest.fixture(autouse=True)
+def mock_session_repository(monkeypatch):
+    repository = Mock()
+    repository.get_or_create_session.return_value = Mock()
+    repository.get_turns.return_value = []
+
+    monkeypatch.setattr(process_api, "repository", repository)
+    sessions.clear()
+
+    yield
+
+    sessions.clear()
+
 
 def test_health():
     response = client.get("/health")
@@ -70,6 +86,7 @@ def test_process_audio(monkeypatch):
     assert "emotion" in data["human_state"]
     assert "policy" in data["dialogue"]
 
+
 def test_unsupported_audio_format():
     response = client.post(
         "/api/v1/process?session_id=test-session",
@@ -113,6 +130,7 @@ def test_sessions_are_isolated():
     assert session_a_first is not session_b
 
     assert session_a_first.dialogue_service is not session_b.dialogue_service
+
 
 def test_session_conversation_histories_are_isolated():
     sessions.clear()
