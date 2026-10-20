@@ -182,3 +182,29 @@ def test_conversation_memory_accumulates_turns():
         second["history"][0]["assistant_message"]
         == "A neural network is a machine learning model."
     )
+
+
+def test_overloaded_uncertain_policy_reaches_prompt():
+    service = DialogueService()
+
+    human_state = {
+        "emotion": {"label": "neutral", "score": 0.7},
+        "hesitation": {"score": 0.3},
+        "confidence": {"score": 0.3},
+        "engagement": {"score": 0.6},
+        "cognitive_load": {"score": 0.9},
+    }
+
+    result = service.process(
+        "I'm overwhelmed and don't understand this.",
+        human_state,
+    )
+
+    assert result["policy"]["strategy"] == "simplify"
+    assert result["policy"]["response_style"] == "supportive"
+    assert result["policy"]["complexity"] == "simple"
+    assert result["policy"]["detail_level"] == "minimal"
+
+    assert "Response style: supportive" in result["prompt"]
+    assert "Explanation complexity: simple" in result["prompt"]
+    assert "Detail level: minimal" in result["prompt"]

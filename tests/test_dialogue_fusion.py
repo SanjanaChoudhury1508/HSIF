@@ -143,3 +143,18 @@ def test_invalid_scores_are_safe():
     assert 0.0 <= result["confidence"] <= 1.0
     assert 0.0 <= result["engagement"] <= 1.0
     assert 0.0 <= result["cognitive_load"] <= 1.0
+
+
+def test_high_cognitive_load_and_low_confidence():
+    human_state = make_human_state(
+        hesitation=0.3,
+        confidence=0.3,
+        engagement=0.6,
+        cognitive_load=0.9,
+    )
+
+    result = StateFusion.fuse_to_dict(human_state)
+
+    assert result["interaction_state"] == "overloaded_uncertain"
+    assert result["needs_clarification"] is True
+    assert result["needs_encouragement"] is True

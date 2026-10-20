@@ -143,6 +143,14 @@ class StateFusion:
             and confidence <= 0.45
         )
 
+        # High cognitive load combined with low confidence
+        # suggests that the user may need simpler guidance
+        # and encouragement.
+        overloaded_uncertain = (
+            cognitive_load >= 0.7
+            and confidence < 0.4
+        )
+
         # High cognitive load suggests that the user may
         # benefit from a simpler response.
         overloaded = cognitive_load >= 0.7
@@ -151,7 +159,9 @@ class StateFusion:
         # to regain the user's attention.
         disengaged = engagement <= 0.3
 
-        if overloaded:
+        if overloaded_uncertain:
+            interaction_state = "overloaded_uncertain"
+        elif overloaded:
             interaction_state = "overloaded"
         elif struggling:
             interaction_state = "struggling"
@@ -173,6 +183,7 @@ class StateFusion:
 
         needs_encouragement = (
             struggling
+            or overloaded_uncertain
             or confidence <= 0.35
             or disengaged
         )
