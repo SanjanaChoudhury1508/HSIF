@@ -15,7 +15,7 @@ client = TestClient(app)
 
 def make_pipeline():
     pipeline = Mock()
-    
+
     pipeline.process_audio.return_value = {
         "speech": {
             "transcript": "Hello there.",
@@ -136,15 +136,15 @@ def test_websocket_streams_chunk_and_returns_final_events(monkeypatch):
             "assistant_response",
         }
 
-        
+
         for _ in range(10):
             if expected.issubset({event["type"] for event in received}):
                 break
-        
+
             event=websocket.receive_json()
             print("Received event:", event)
             received.append(event)
-        
+
         actual = {event["type"] for event in received}
         assert expected.issubset(actual), f"Missing events: {expected - actual}; received: {received}"
 
