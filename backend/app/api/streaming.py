@@ -449,14 +449,19 @@ async def stream_session(websocket: WebSocket, session_id: str):
 
                     dialogue = result["dialogue"]
                     policy = dialogue.get("policy", {})
-
+                    speech = result["speech"]
                     await send_event(
                         websocket,
                         "transcript_final",
                         session_id,
                         turn_id=turn_id,
-                        text=result["speech"]["transcript"],
+                        text=speech["transcript"],
                         is_final=True,
+                        language=speech["language"],
+                        language_probability=speech["language_probability"],
+                        audio=speech["audio"],
+                        vad=speech["vad"],
+                        features=speech["features"],
                     )
 
                     await send_event(

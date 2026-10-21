@@ -15,19 +15,49 @@ client = TestClient(app)
 
 def make_pipeline():
     pipeline = Mock()
+    
     pipeline.process_audio.return_value = {
-        "speech": {"transcript": "Hello there."},
+        "speech": {
+            "transcript": "Hello there.",
+            "language": "en",
+            "language_probability": 0.99,
+            "audio": {
+                "duration": 1.0,
+                "speech_duration": 0.8,
+                "silence_duration": 0.2,
+            },
+            "vad": {
+                "speech_segments": [],
+                "pause_count": 0,
+                "longest_pause": 0.0,
+                "speech_to_silence_ratio": 4.0,
+                "pauses": [],
+            },
+            "features": {
+                "number_of_pauses": 0,
+                "average_pause_duration": 0.0,
+                "max_pause_duration": 0.0,
+                "mean_energy": 0.0,
+                "std_energy": 0.0,
+                "mean_pitch": 0.0,
+                "std_pitch": 0.0,
+                "min_pitch": 0.0,
+                "max_pitch": 0.0,
+                "speech_rate": 0.0,
+            },
+        },
         "human_state": {"emotion": "calm"},
         "dialogue": {
-        "strategy": "continue",
-        "reason": "The user greeted the assistant.",
-        "policy": {
             "strategy": "continue",
             "reason": "The user greeted the assistant.",
+            "policy": {
+                "strategy": "continue",
+                "reason": "The user greeted the assistant.",
+            },
         },
-    },
         "response": "Hi! How can I help?",
     }
+
     pipeline.speech_service.transcriber.transcribe_pcm_chunk.return_value = (
         "Hello there."
     )
@@ -112,6 +142,9 @@ def test_websocket_streams_chunk_and_returns_final_events(monkeypatch):
                 break
         
             received.append(websocket.receive_json())
+            event=websocket.receive_json()
+            print("Received event:", event)
+            received.append(event)
         
         actual = {event["type"] for event in received}
         assert expected.issubset(actual), f"Missing events: {expected - actual}; received: {received}"
