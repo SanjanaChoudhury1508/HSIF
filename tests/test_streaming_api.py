@@ -141,7 +141,6 @@ def test_websocket_streams_chunk_and_returns_final_events(monkeypatch):
             if expected.issubset({event["type"] for event in received}):
                 break
         
-            received.append(websocket.receive_json())
             event=websocket.receive_json()
             print("Received event:", event)
             received.append(event)
