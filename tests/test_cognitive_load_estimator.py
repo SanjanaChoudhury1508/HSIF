@@ -1,7 +1,7 @@
+import pytest
 from ai.human_state.cognitive_load.estimator import (
     estimate_cognitive_load,
 )
-
 
 def make_speech_result(
     duration=10.0,
@@ -207,3 +207,38 @@ def test_score_is_bounded():
     )
 
     assert 0.0 <= result["score"] <= 1.0
+
+@pytest.mark.parametrize(
+    "speech_result",
+    [
+        None,
+        [],
+        "invalid",
+        {},
+        {"audio": None},
+        {"audio": []},
+        {"audio": "invalid"},
+        {"features": None},
+        {"features": []},
+        {"features": "invalid"},
+        {"audio": None, "features": None},
+    ],
+)
+def test_malformed_input_is_safe(speech_result):
+    result = estimate_cognitive_load(speech_result)
+
+    assert isinstance(result, dict)
+    assert "score" in result
+    assert isinstance(result["score"], float)
+    assert 0.0 <= result["score"] <= 1.0
+
+
+def test_max_pause_normalization_uses_fixed_reference():
+    from ai.human_state.cognitive_load.estimator import _normalize
+
+    max_pause_duration = 2.0
+    reference_duration = 3.0
+
+    score = _normalize(max_pause_duration, reference_duration)
+
+    assert score == pytest.approx(2.0 / 3.0)

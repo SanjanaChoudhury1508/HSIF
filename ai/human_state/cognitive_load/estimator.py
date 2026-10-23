@@ -61,7 +61,8 @@ def estimate_cognitive_load(
             default=0.0,
         )
     )
-
+    if not isinstance(speech_result, dict):
+        speech_result={}
     if duration <= 0:
         return {"score": 0.5}
 

@@ -16,9 +16,19 @@ class ConfidenceEstimator:
             return 0.0
         return min(value / maximum, 1.0)
 
+
     def estimate(self, speech_result):
+        if not isinstance(speech_result, dict):
+            speech_result = {}
+
         features = speech_result.get("features", {})
         audio = speech_result.get("audio", {})
+
+        if not isinstance(features, dict):
+            features = {}
+
+        if not isinstance(audio, dict):
+            audio = {}
 
         number_of_pauses = self._safe_float(
             features.get("number_of_pauses", 0)
@@ -40,22 +50,14 @@ class ConfidenceEstimator:
         )
 
         if speech_duration <= 0:
-            return {
-                "score": 0.5
-            }
+            return {"score": 0.5}
 
         pitch_range = max(0.0, max_pitch - min_pitch)
-
         pause_frequency = number_of_pauses / speech_duration
 
-        pause_penalty = self._normalize(
-            pause_frequency,
-            0.5,
-        )
-
+        pause_penalty = self._normalize(pause_frequency, 0.5)
         duration_penalty = self._normalize(
-            average_pause_duration,
-            2.0,
+            average_pause_duration, 2.0
         )
 
         pause_confidence = 1.0 - pause_penalty
@@ -68,13 +70,10 @@ class ConfidenceEstimator:
         else:
             pitch_score = max(
                 0.4,
-                0.9 - ((pitch_range - 150.0) / 250.0)
+                0.9 - ((pitch_range - 150.0) / 250.0),
             )
 
-        energy_score = self._normalize(
-            mean_energy,
-            0.12,
-        )
+        energy_score = self._normalize(mean_energy, 0.12)
 
         score = (
             0.30 * pause_confidence
@@ -83,9 +82,4 @@ class ConfidenceEstimator:
             + 0.25 * energy_score
         )
 
-        return {
-            "score": round(
-                max(0.0, min(score, 1.0)),
-                3,
-            )
-        }
+        return {"score": round(max(0.0, min(score, 1.0)), 3)}

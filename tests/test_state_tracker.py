@@ -230,3 +230,40 @@ def test_invalid_observation_does_not_generate_state_changes():
     tracker.add_state(second)
 
     assert tracker.get_state_changes() == []
+
+def test_state_changes_compare_valid_observations_across_invalid_records():
+    tracker = StateTracker(change_threshold=0.1)
+
+    first = make_state(engagement=0.2)
+    first.timestamp = 1.0
+
+    invalid = make_state(engagement=0.95)
+    invalid.timestamp = 2.0
+    invalid.observation_valid = False
+
+    last = make_state(
+        emotion="excited",
+        engagement=0.8,
+    )
+    last.timestamp = 4.0
+
+    tracker.add_state(first)
+    tracker.add_state(invalid)
+    tracker.add_state(last)
+
+    # Invalid records remain visible in history and trajectory.
+    assert len(tracker.get_history()) == 3
+    assert tracker.get_trajectory()[1]["observation_valid"] is False
+
+    changes = tracker.get_state_changes()
+
+    assert len(changes) == 1
+    assert changes[0]["from_index"] == 0
+    assert changes[0]["to_index"] == 2
+    assert changes[0]["elapsed_seconds"] == 3.0
+    assert changes[0]["changes"]["emotion"] == {
+        "from": "neutral",
+        "to": "excited",
+    }
+    assert changes[0]["changes"]["engagement"]["from"] == 0.2
+    assert changes[0]["changes"]["engagement"]["to"] == 0.8

@@ -16,9 +16,19 @@ class HesitationDetector:
             return 0.0
         return min(value / maximum, 1.0)
 
+
     def detect(self, speech_result):
+        if not isinstance(speech_result, dict):
+            speech_result = {}
+
         features = speech_result.get("features", {})
         audio = speech_result.get("audio", {})
+
+        if not isinstance(features, dict):
+            features = {}
+
+        if not isinstance(audio, dict):
+            audio = {}
 
         number_of_pauses = self._safe_float(
             features.get("number_of_pauses", 0)
@@ -40,9 +50,7 @@ class HesitationDetector:
         total_duration = speech_duration + silence_duration
 
         if total_duration <= 0:
-            return {
-                "score": 0.5
-            }
+            return {"score": 0.5}
 
         pause_frequency = (
             number_of_pauses / speech_duration

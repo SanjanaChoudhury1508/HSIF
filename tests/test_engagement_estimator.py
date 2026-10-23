@@ -1,5 +1,5 @@
+import pytest
 from ai.human_state.engagement.estimator import EngagementEstimator
-
 
 def make_speech_result(
     speech=10.0,
@@ -186,3 +186,82 @@ def test_score_is_bounded():
     )
 
     assert 0.0 <= result["score"] <= 1.0
+
+@pytest.mark.parametrize(
+    "speech_result",
+    [
+        None,
+        [],
+        "invalid",
+        {},
+        {"features": None},
+        {"features": []},
+        {"features": "invalid"},
+        {"audio": None},
+        {"audio": []},
+        {"audio": "invalid"},
+        {"features": None, "audio": None},
+    ],
+)
+def test_malformed_input_is_safe(speech_result):
+    estimator = EngagementEstimator()
+
+    result = estimator.estimate(speech_result)
+
+    assert isinstance(result, dict)
+    assert "score" in result
+    assert isinstance(result["score"], float)
+    assert 0.0 <= result["score"] <= 1.0
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        float("inf"),
+        float("-inf"),
+        float("nan"),
+    ],
+)
+def test_non_finite_features_produce_bounded_score(value):
+    estimator = EngagementEstimator()
+
+    result = estimator.estimate(
+        make_speech_result(
+            speech=10.0,
+            silence=2.0,
+            energy=value,
+            pauses=1,
+            min_pitch=100.0,
+            max_pitch=180.0,
+        )
+    )
+
+    assert isinstance(result["score"], float)
+    assert 0.0 <= result["score"] <= 1.0
+
+
+def test_equivalent_speech_patterns_have_consistent_engagement():
+    estimator = EngagementEstimator()
+
+    short_recording = estimator.estimate(
+        make_speech_result(
+            speech=10.0,
+            silence=2.0,
+            energy=0.08,
+            pauses=2,
+            min_pitch=100.0,
+            max_pitch=180.0,
+        )
+    )
+
+    long_recording = estimator.estimate(
+        make_speech_result(
+            speech=20.0,
+            silence=4.0,
+            energy=0.08,
+            pauses=4,
+            min_pitch=100.0,
+            max_pitch=180.0,
+        )
+    )
+
+    assert short_recording["score"] == long_recording["score"]

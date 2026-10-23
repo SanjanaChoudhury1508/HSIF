@@ -13,8 +13,9 @@ The engine coordinates all individual estimators and records
 successive HumanState objects through StateTracker.
 """
 
+import math
 from typing import Any, Dict, Mapping
-
+from ai.human_state.temporal_smoother import TemporalSmoother
 from ai.human_state.hsr import HumanState, build_human_state
 from ai.human_state.state_tracker import StateTracker
 from ai.human_state.emotion.detector import EmotionDetector
@@ -37,6 +38,8 @@ class HumanStateEngine:
         confidence_estimator: ConfidenceEstimator | None = None,
         engagement_estimator: EngagementEstimator | None = None,
         state_tracker: StateTracker | None = None,
+        temporal_smoother: TemporalSmoother | None = None,
+        enable_temporal_smoothing: bool = False,
     ) -> None:
         self.emotion_detector = emotion_detector or EmotionDetector()
         self.hesitation_detector = hesitation_detector or HesitationDetector()
@@ -47,6 +50,8 @@ class HumanStateEngine:
             engagement_estimator or EngagementEstimator()
         )
         self.state_tracker = state_tracker or StateTracker()
+        self.temporal_smoother = temporal_smoother or TemporalSmoother()
+        self.enable_temporal_smoothing = enable_temporal_smoothing
 
     @staticmethod
     def _validate_input(
@@ -77,6 +82,7 @@ class HumanStateEngine:
 
         return normalized
 
+
     @staticmethod
     def _clamp_score(
         value: Any,
@@ -84,10 +90,10 @@ class HumanStateEngine:
     ) -> float:
         try:
             score = float(value)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             score = default
 
-        if score != score:
+        if not math.isfinite(score):
             score = default
 
         return round(max(0.0, min(score, 1.0)), 3)
@@ -110,11 +116,19 @@ class HumanStateEngine:
             )
         }
 
+
     @classmethod
     def _normalize_emotion_result(
         cls,
         result: Any,
     ) -> Dict[str, Any]:
+        allowed_labels = {
+            "neutral",
+            "excited",
+            "sad",
+            "happy",
+        }
+
         if not isinstance(result, Mapping):
             return {
                 "label": "neutral",
@@ -123,10 +137,12 @@ class HumanStateEngine:
 
         label = result.get("label", "neutral")
 
-        if not isinstance(label, str) or not label.strip():
+        if not isinstance(label, str):
             label = "neutral"
         else:
             label = label.strip().lower()
+            if label not in allowed_labels:
+                label = "neutral"
 
         return {
             "label": label,
@@ -148,6 +164,20 @@ class HumanStateEngine:
         automatically record it in the StateTracker.
         """
         speech_result = self._validate_input(speech_result)
+        if not observation_valid:
+            state = build_human_state(
+                emotion_label="neutral",
+                emotion_score=0.5,
+                hesitation_score=0.5,
+                confidence_score=0.5,
+                engagement_score=0.5,
+                cognitive_load_score=0.5,
+                timestamp=timestamp,
+                observation_valid=False,
+            )
+
+            self.state_tracker.add_state(state)
+            return state
 
         emotion_result = self.emotion_detector.detect(
             speech_result
@@ -200,6 +230,9 @@ class HumanStateEngine:
             observation_valid=observation_valid,
         )
 
+        if self.enable_temporal_smoothing:
+            state = self.temporal_smoother.smooth(state)
+
         self.state_tracker.add_state(state)
 
         return state
@@ -233,7 +266,9 @@ class HumanStateEngine:
         return self.state_tracker.get_state_changes()
 
     def clear_state_history(self) -> None:
+        """Clear tracked history and reset temporal smoothing context."""
         self.state_tracker.clear()
+        self.temporal_smoother.reset()
 
 
 if __name__ == "__main__":

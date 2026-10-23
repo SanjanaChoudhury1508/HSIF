@@ -1,5 +1,5 @@
+import pytest
 from ai.human_state.confidence.estimator import ConfidenceEstimator
-
 
 def make_speech_result(
     pauses=0,
@@ -184,3 +184,97 @@ def test_score_is_bounded():
     )
 
     assert 0.0 <= result["score"] <= 1.0
+
+@pytest.mark.parametrize(
+    "speech_result",
+    [
+        None,
+        [],
+        "invalid",
+        {},
+        {"features": None},
+        {"features": []},
+        {"features": "invalid"},
+        {"audio": None},
+        {"audio": []},
+        {"audio": "invalid"},
+        {"features": None, "audio": None},
+    ],
+)
+def test_malformed_input_is_safe(speech_result):
+    estimator = ConfidenceEstimator()
+
+    result = estimator.estimate(speech_result)
+
+    assert isinstance(result, dict)
+    assert "score" in result
+    assert isinstance(result["score"], float)
+    assert 0.0 <= result["score"] <= 1.0
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        float("inf"),
+        float("-inf"),
+        float("nan"),
+    ],
+)
+def test_non_finite_features_produce_bounded_score(value):
+    estimator = ConfidenceEstimator()
+
+    result = estimator.estimate(
+        make_speech_result(
+            pauses=1,
+            average_pause=0.2,
+            min_pitch=100.0,
+            max_pitch=value,
+            energy=value,
+            speech=10.0,
+        )
+    )
+
+    assert isinstance(result["score"], float)
+    assert 0.0 <= result["score"] <= 1.0
+
+
+def test_reversed_pitch_bounds_do_not_crash():
+    estimator = ConfidenceEstimator()
+
+    result = estimator.estimate(
+        make_speech_result(
+            min_pitch=200.0,
+            max_pitch=100.0,
+            energy=0.08,
+            speech=10.0,
+        )
+    )
+
+    assert isinstance(result["score"], float)
+    assert 0.0 <= result["score"] <= 1.0
+
+def test_equivalent_speech_patterns_have_consistent_confidence():
+    estimator = ConfidenceEstimator()
+
+    short_recording = estimator.estimate(
+        make_speech_result(
+            pauses=2,
+            average_pause=0.2,
+            min_pitch=100.0,
+            max_pitch=180.0,
+            energy=0.08,
+            speech=10.0,
+        )
+    )
+
+    long_recording = estimator.estimate(
+        make_speech_result(
+            pauses=4,
+            average_pause=0.2,
+            min_pitch=100.0,
+            max_pitch=180.0,
+            energy=0.08,
+            speech=20.0,
+        )
+    )
+
+    assert short_recording["score"] == long_recording["score"]

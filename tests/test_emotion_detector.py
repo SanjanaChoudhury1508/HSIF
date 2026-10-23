@@ -1,5 +1,5 @@
+import pytest
 from ai.human_state.emotion.detector import EmotionDetector
-
 
 def make_speech_result(
     mean_pitch,
@@ -117,4 +117,59 @@ def test_emotion_score_is_bounded():
         )
     )
 
+    assert 0.0 <= result["score"] <= 1.0
+
+@pytest.mark.parametrize(
+    "speech_result",
+    [
+        {"features": None},
+        {"features": []},
+        {"features": "invalid"},
+        None,
+        [],
+        "invalid",
+    ],
+)
+def test_malformed_input_does_not_crash(speech_result):
+    detector = EmotionDetector()
+
+    try:
+        result = detector.detect(speech_result)
+    except (AttributeError, TypeError):
+        pytest.fail("EmotionDetector.detect crashed on malformed input")
+
+    assert result["label"] in {"neutral", "excited", "sad", "happy"}
+    assert 0.0 <= result["score"] <= 1.0
+
+def test_inconsistent_pitch_bounds_return_bounded_result():
+    detector = EmotionDetector()
+
+    result = detector.detect(
+        make_speech_result(
+            mean_pitch=180.0,
+            min_pitch=250.0,
+            max_pitch=100.0,
+            mean_energy=0.10,
+        )
+    )
+
+    assert result["label"] in {"neutral", "excited", "sad", "happy"}
+    assert isinstance(result["score"], float)
+    assert 0.0 <= result["score"] <= 1.0
+
+
+def test_non_finite_features_return_bounded_result():
+    detector = EmotionDetector()
+
+    result = detector.detect(
+        make_speech_result(
+            mean_pitch=float("inf"),
+            min_pitch=100.0,
+            max_pitch=float("nan"),
+            mean_energy=0.10,
+        )
+    )
+
+    assert result["label"] in {"neutral", "excited", "sad", "happy"}
+    assert isinstance(result["score"], float)
     assert 0.0 <= result["score"] <= 1.0

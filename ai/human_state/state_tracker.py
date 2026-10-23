@@ -74,16 +74,17 @@ class StateTracker:
 
     def get_state_changes(self) -> list[dict[str, Any]]:
         changes = []
+        previous_valid = None
 
-        for i in range(1, len(self._history)):
-            previous = self._history[i - 1]
-            current = self._history[i]
-
-            # Invalid observations should not be treated as reliable
-            # evidence of a human-state change.
-            if not previous.observation_valid or not current.observation_valid:
+        for index, current in enumerate(self._history):
+            if not current.observation_valid:
                 continue
 
+            if previous_valid is None:
+                previous_valid = (index, current)
+                continue
+
+            previous_index, previous = previous_valid
             state_changes = {}
 
             if previous.emotion.label != current.emotion.label:
@@ -111,8 +112,8 @@ class StateTracker:
 
             if state_changes:
                 change = {
-                    "from_index": i - 1,
-                    "to_index": i,
+                    "from_index": previous_index,
+                    "to_index": index,
                     "changes": state_changes,
                 }
 
@@ -125,5 +126,7 @@ class StateTracker:
                     )
 
                 changes.append(change)
+
+            previous_valid = (index, current)
 
         return changes

@@ -14,8 +14,14 @@ class EmotionDetector:
         except (TypeError, ValueError):
             return default
 
+
     def detect(self, speech_result):
+        if not isinstance(speech_result, dict):
+            speech_result = {}
+
         features = speech_result.get("features", {})
+        if not isinstance(features, dict):
+            features = {}
 
         mean_pitch = self._safe_float(features.get("mean_pitch", 0.0))
         min_pitch = self._safe_float(features.get("min_pitch", 0.0))
@@ -25,8 +31,13 @@ class EmotionDetector:
         if mean_pitch <= 0 or mean_energy <= 0:
             return {
                 "label": "neutral",
-                "score": 0.5
+                "score": 0.5,
             }
+
+        # Treat inconsistent pitch bounds as unavailable.
+        if min_pitch > max_pitch:
+            min_pitch = 0.0
+            max_pitch = 0.0
 
         pitch_range = max(0.0, max_pitch - min_pitch)
 
@@ -64,10 +75,10 @@ class EmotionDetector:
         if score < 0.65:
             return {
                 "label": "neutral",
-                "score": round(1.0 - score, 3)
+                "score": round(1.0 - score, 3),
             }
 
         return {
             "label": label,
-            "score": round(self._clamp(score), 3)
+            "score": round(self._clamp(score), 3),
         }

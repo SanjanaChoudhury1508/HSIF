@@ -16,9 +16,19 @@ class EngagementEstimator:
             return 0.0
         return min(value / maximum, 1.0)
 
+
     def estimate(self, speech_result):
+        if not isinstance(speech_result, dict):
+            speech_result = {}
+
         features = speech_result.get("features", {})
         audio = speech_result.get("audio", {})
+
+        if not isinstance(features, dict):
+            features = {}
+
+        if not isinstance(audio, dict):
+            audio = {}
 
         speech_duration = self._safe_float(
             audio.get("speech_duration", 0.0)
@@ -42,9 +52,7 @@ class EngagementEstimator:
         total_duration = speech_duration + silence_duration
 
         if total_duration <= 0:
-            return {
-                "score": 0.5
-            }
+            return {"score": 0.5}
 
         speech_activity = speech_duration / total_duration
 
@@ -54,10 +62,7 @@ class EngagementEstimator:
             else 0.0
         )
 
-        pause_penalty = self._normalize(
-            pause_frequency,
-            0.5,
-        )
+        pause_penalty = self._normalize(pause_frequency, 0.5)
 
         pitch_range = max(0.0, max_pitch - min_pitch)
 
@@ -65,15 +70,10 @@ class EngagementEstimator:
             pitch_score = 0.9
         elif pitch_range >= 50:
             pitch_score = 0.7
-        elif pitch_range > 0:
-            pitch_score = 0.5
         else:
             pitch_score = 0.5
 
-        energy_score = self._normalize(
-            mean_energy,
-            0.12,
-        )
+        energy_score = self._normalize(mean_energy, 0.12)
 
         score = (
             0.35 * speech_activity
@@ -83,8 +83,5 @@ class EngagementEstimator:
         )
 
         return {
-            "score": round(
-                max(0.0, min(score, 1.0)),
-                3,
-            )
+            "score": round(max(0.0, min(score, 1.0)), 3)
         }

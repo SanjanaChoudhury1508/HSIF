@@ -1,3 +1,4 @@
+import pytest
 from ai.human_state.hesitation.detector import HesitationDetector
 
 
@@ -181,3 +182,52 @@ def test_score_is_bounded():
     )
 
     assert 0.0 <= result["score"] <= 1.0
+
+@pytest.mark.parametrize(
+    "speech_result",
+    [
+        None,
+        [],
+        "invalid",
+        {"features": None},
+        {"features": []},
+        {"features": "invalid"},
+        {"audio": None},
+        {"audio": []},
+        {"audio": "invalid"},
+        {"features": None, "audio": None},
+    ],
+)
+def test_malformed_input_is_safe(speech_result):
+    detector = HesitationDetector()
+
+    result = detector.detect(speech_result)
+
+    assert isinstance(result, dict)
+    assert "score" in result
+    assert 0.0 <= result["score"] <= 1.0
+
+def test_equivalent_speech_patterns_have_consistent_hesitation():
+    detector = HesitationDetector()
+
+    short_recording = detector.detect(
+        make_speech_result(
+            pauses=2,
+            average_pause=0.2,
+            max_pause=0.5,
+            silence=2.0,
+            speech=10.0,
+        )
+    )
+
+    long_recording = detector.detect(
+        make_speech_result(
+            pauses=4,
+            average_pause=0.2,
+            max_pause=0.5,
+            silence=4.0,
+            speech=20.0,
+        )
+    )
+
+    assert short_recording["score"] == long_recording["score"]
