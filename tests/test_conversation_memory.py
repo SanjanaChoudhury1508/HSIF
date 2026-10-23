@@ -157,3 +157,98 @@ def test_turn_defaults_state_and_strategy_to_none():
 
     assert history[0]["human_state"] is None
     assert history[0]["dialogue_strategy"] is None
+
+def test_get_relevant_prefers_older_matching_turn():
+    memory = ConversationMemory(max_turns=10)
+
+    memory.add_turn(
+        "Explain Python decorators",
+        "Decorators modify or wrap functions.",
+    )
+    memory.add_turn(
+        "What is the weather today?",
+        "I cannot determine your local weather here.",
+    )
+    memory.add_turn(
+        "Suggest a dinner recipe",
+        "You could make a vegetable stir-fry.",
+    )
+
+    results = memory.get_relevant(
+        "Explain Python decorators",
+        count=1,
+        include_recent=False,
+    )
+
+    assert len(results) == 1
+    assert results[0]["user_message"] == "Explain Python decorators"
+
+
+def test_get_relevant_returns_results_in_chronological_order():
+    memory = ConversationMemory()
+
+    memory.add_turn(
+        "Explain Python decorators",
+        "Decorators wrap functions.",
+    )
+    memory.add_turn(
+        "Explain Python generators",
+        "Generators yield values lazily.",
+    )
+    memory.add_turn(
+        "What is the weather?",
+        "I cannot determine that here.",
+    )
+
+    results = memory.get_relevant(
+        "Explain Python decorators and generators",
+        count=2,
+        include_recent=False,
+    )
+
+    assert [
+        turn["user_message"] for turn in results
+    ] == [
+        "Explain Python decorators",
+        "Explain Python generators",
+    ]
+
+
+def test_get_relevant_falls_back_to_recent_for_unmatched_query():
+    memory = ConversationMemory()
+
+    memory.add_turn("Discuss Python", "Python is a programming language.")
+    memory.add_turn("Discuss databases", "Databases store structured data.")
+
+    results = memory.get_relevant(
+        "unrelatedxyz",
+        count=1,
+        include_recent=True,
+    )
+
+    assert len(results) == 1
+    assert results[0]["user_message"] == "Discuss databases"
+
+
+def test_get_relevant_empty_query_returns_recent_fallback():
+    memory = ConversationMemory()
+
+    memory.add_turn("First topic", "First answer")
+    memory.add_turn("Second topic", "Second answer")
+
+    results = memory.get_relevant(
+        "",
+        count=1,
+        include_recent=True,
+    )
+
+    assert len(results) == 1
+    assert results[0]["user_message"] == "Second topic"
+
+
+def test_get_recent_zero_returns_empty_list():
+    memory = ConversationMemory()
+
+    memory.add_turn("Hello", "Hi!")
+
+    assert memory.get_recent(0) == []

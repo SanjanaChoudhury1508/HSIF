@@ -1,3 +1,4 @@
+
 """
 dialogue_policy.py
 
@@ -5,6 +6,7 @@ Converts the fused DialogueState into a recommended
 response strategy for the conversational AI.
 """
 
+import math
 from dataclasses import dataclass, asdict
 from typing import Any, Dict, Mapping
 
@@ -35,6 +37,23 @@ class DialoguePolicy:
     ) -> bool:
         """Safely extract a boolean value."""
         return bool(state.get(field, False))
+
+    @staticmethod
+    def _get_score(
+        state: Mapping[str, Any],
+        field: str,
+        default: float = 0.5,
+    ) -> float:
+        """Safely extract a finite score and clamp it to [0, 1]."""
+        try:
+            score = float(state.get(field, default))
+        except (TypeError, ValueError, OverflowError):
+            return default
+
+        if not math.isfinite(score):
+            return default
+
+        return round(max(0.0, min(score, 1.0)), 3)
 
     @staticmethod
     def _get_state(state: Mapping[str, Any]) -> str:
@@ -85,16 +104,9 @@ class DialoguePolicy:
             emotion = "neutral"
         emotion = emotion.strip().lower()
 
-        hesitation = dialogue_state.get("hesitation", 0.5)
-        confidence = dialogue_state.get("confidence", 0.5)
-        cognitive_load = dialogue_state.get("cognitive_load", 0.5)
-
-        try:
-            hesitation = float(hesitation)
-            confidence = float(confidence)
-            cognitive_load = float(cognitive_load)
-        except (TypeError, ValueError):
-            hesitation = confidence = cognitive_load = 0.5
+        hesitation = cls._get_score(dialogue_state, "hesitation")
+        confidence = cls._get_score(dialogue_state, "confidence")
+        cognitive_load = cls._get_score(dialogue_state, "cognitive_load")
 
         # Acknowledge frustration before applying generic strategies.
         if emotion == "frustrated":
@@ -171,6 +183,7 @@ class DialoguePolicy:
                 complexity="simple",
                 detail_level="moderate",
             )
+
         if interaction_state == "overloaded":
             return PolicyDecision(
                 strategy="simplify",
