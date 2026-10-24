@@ -75,9 +75,13 @@ class DialogueService:
             dialogue_state
         )
 
-        # 3. Retrieve recent conversation history
+        # 3. Retrieve context relevant to the current message
         # before adding the current turn.
-        history = self.memory.get_recent(5)
+        history = self.memory.get_relevant(
+            query=user_message,
+            count=5,
+            include_recent=True,
+        )
 
         # 4. Build an LLM-ready prompt.
         prompt = PromptBuilder.build(

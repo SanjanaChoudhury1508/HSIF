@@ -1,4 +1,3 @@
-
 import pytest
 
 from ai.dialogue.policy.dialogue_policy import (
@@ -279,3 +278,25 @@ def test_low_engagement_returns_reengage():
 
     assert result["strategy"] == "re_engage"
     assert result["priority"] == "medium"
+
+@pytest.mark.parametrize(
+    "field,value,expected",
+    [
+        ("confidence", float("nan"), 0.5),
+        ("hesitation", float("inf"), 0.5),
+        ("cognitive_load", float("-inf"), 0.5),
+        ("confidence", "invalid", 0.5),
+        ("hesitation", None, 0.5),
+        ("confidence", 2.0, 1.0),
+        ("cognitive_load", -1.0, 0.0),
+    ],
+)
+def test_invalid_scores_are_safely_normalized(field, value, expected):
+    state = make_dialogue_state()
+    state[field] = value
+
+    result = DialoguePolicy.decide_to_dict(state)
+
+    assert isinstance(result, dict)
+    assert result["strategy"]
+    assert result["priority"] in {"low", "medium", "high"}
