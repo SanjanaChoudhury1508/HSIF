@@ -523,3 +523,49 @@ def test_observation_validity_from_speech_result(
 )
 def test_invalid_or_malformed_speech_results_are_rejected(speech_result):
     assert PipelineService._is_valid_observation(speech_result) is False
+
+def test_pipeline_does_not_add_dialogue_memory_when_persistence_fails():
+    from unittest.mock import Mock
+
+    import pytest
+
+    repository = Mock()
+    repository.get_turns.return_value = []
+    repository.add_turn.side_effect = RuntimeError("database unavailable")
+
+    service = PipelineService(
+        session_id="persistence-failure-test",
+        repository=repository,
+    )
+
+    service.speech_service = Mock()
+    service.speech_service.process.return_value = {
+        "transcript": "Test persistence failure",
+        "audio": {},
+        "features": {},
+        "vad": {},
+    }
+
+    state = {
+        "emotion": {"label": "neutral", "score": 0.6},
+        "hesitation": {"score": 0.2},
+        "confidence": {"score": 0.7},
+        "engagement": {"score": 0.8},
+        "cognitive_load": {"score": 0.3},
+    }
+
+    service.human_state_engine.process_to_dict = Mock(return_value=state)
+    service.human_state_engine.get_current_state = Mock(return_value=None)
+    service.dialogue_service.process = Mock(
+        return_value={
+            "prompt": "Test prompt",
+            "policy": {"strategy": "continue"},
+        }
+    )
+    service.dialogue_service.add_response = Mock()
+    service.llm_service.generate = Mock(return_value="Test response")
+
+    with pytest.raises(RuntimeError, match="database unavailable"):
+        service.process_audio("test.wav")
+
+    service.dialogue_service.add_response.assert_not_called()

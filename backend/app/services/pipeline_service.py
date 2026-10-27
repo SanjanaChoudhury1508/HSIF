@@ -53,14 +53,8 @@ class PipelineService:
             dialogue_result["prompt"]
         )
 
-        # Store the completed user-assistant interaction
-        # after the LLM has generated its response.
-        self.dialogue_service.add_response(
-            user_message=speech_result["transcript"],
-            assistant_message=llm_response,
-            human_state=human_state,
-            dialogue_strategy=dialogue_result["policy"]["strategy"],
-        )
+        # Persist first so failed writes do not leave dialogue memory
+        # containing a turn that was not saved.
         if self.session_id and self.repository:
             self.repository.add_turn(
                 session_id=self.session_id,
@@ -69,6 +63,14 @@ class PipelineService:
                 human_state=persisted_human_state,
                 dialogue_strategy=dialogue_result["policy"]["strategy"],
             )
+
+        # Update in-memory conversation history only after persistence succeeds.
+        self.dialogue_service.add_response(
+            user_message=speech_result["transcript"],
+            assistant_message=llm_response,
+            human_state=human_state,
+            dialogue_strategy=dialogue_result["policy"]["strategy"],
+        )
 
         return {
             "speech": speech_result,
