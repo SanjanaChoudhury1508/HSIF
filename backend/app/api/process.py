@@ -73,7 +73,7 @@ async def process_audio(
             )
         )
 
-    content = await audio.read()
+    content = await audio.read(MAX_FILE_SIZE + 1)
 
     if not content:
         raise HTTPException(
