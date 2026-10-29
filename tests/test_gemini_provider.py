@@ -65,7 +65,7 @@ def test_gemini_provider_configures_request_timeout(monkeypatch):
 
     provider = GeminiProvider()
 
-    assert provider.client is not None
+    assert provider.client._api_client._http_options.timeout == 30_000
 
 
 def test_gemini_provider_propagates_timeout(monkeypatch):

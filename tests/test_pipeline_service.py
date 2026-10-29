@@ -569,3 +569,57 @@ def test_pipeline_does_not_add_dialogue_memory_when_persistence_fails():
         service.process_audio("test.wav")
 
     service.dialogue_service.add_response.assert_not_called()
+
+
+def test_pipeline_does_not_persist_or_add_dialogue_memory_on_llm_timeout():
+    from unittest.mock import Mock
+
+    import pytest
+
+    repository = Mock()
+    repository.get_turns.return_value = []
+
+    service = PipelineService(
+        session_id="llm-timeout-test",
+        repository=repository,
+    )
+
+    service.speech_service = Mock()
+    service.speech_service.process.return_value = {
+        "transcript": "Test timeout",
+        "audio": {},
+        "features": {},
+        "vad": {},
+    }
+
+    state = {
+        "emotion": {"label": "neutral", "score": 0.5},
+        "hesitation": {"score": 0.0},
+        "confidence": {"score": 0.5},
+        "cognitive_load": {"score": 0.3},
+    }
+
+    service.human_state_engine.process_to_dict = Mock(
+        return_value=state
+    )
+    service.human_state_engine.get_current_state = Mock(
+        return_value=None
+    )
+
+    service.dialogue_service.process = Mock(
+        return_value={
+            "prompt": "Test prompt",
+            "policy": {"strategy": "continue"},
+        }
+    )
+    service.dialogue_service.add_response = Mock()
+
+    service.llm_service.generate = Mock(
+        side_effect=TimeoutError("Request timed out")
+    )
+
+    with pytest.raises(TimeoutError, match="Request timed out"):
+        service.process_audio("test.wav")
+
+    repository.add_turn.assert_not_called()
+    service.dialogue_service.add_response.assert_not_called()
