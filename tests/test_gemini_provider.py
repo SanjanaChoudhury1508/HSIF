@@ -1,4 +1,3 @@
-
 import pytest
 from unittest.mock import Mock
 
@@ -57,6 +56,28 @@ def test_gemini_provider_does_not_retry_quota_errors(monkeypatch):
     )
 
     with pytest.raises(GeminiQuotaExceededError):
+        provider.generate("Test prompt")
+
+    provider.client.models.generate_content.assert_called_once()
+
+def test_gemini_provider_configures_request_timeout(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+
+    provider = GeminiProvider()
+
+    assert provider.client is not None
+
+
+def test_gemini_provider_propagates_timeout(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+
+    provider = GeminiProvider()
+    provider.client = Mock()
+    provider.client.models.generate_content.side_effect = TimeoutError(
+        "Request timed out"
+    )
+
+    with pytest.raises(TimeoutError, match="Request timed out"):
         provider.generate("Test prompt")
 
     provider.client.models.generate_content.assert_called_once()

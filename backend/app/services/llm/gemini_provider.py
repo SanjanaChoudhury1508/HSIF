@@ -3,11 +3,11 @@ import time
 
 from dotenv import load_dotenv
 from google import genai
-from google.genai import errors
+from google.genai import errors, types
 
 
 load_dotenv()
-
+GEMINI_TIMEOUT_MS=30_000
 
 class GeminiQuotaExceededError(RuntimeError):
     """Raised when Gemini API quota is exhausted."""
@@ -22,7 +22,12 @@ class GeminiProvider:
                 "GEMINI_API_KEY environment variable is not set."
             )
 
-        self.client = genai.Client(api_key=api_key)
+        self.client = genai.Client(
+            api_key=api_key,
+            http_options=types.HttpOptions(
+                timeout=GEMINI_TIMEOUT_MS,
+            ),
+        )
         self.model = model
 
     def generate(self, prompt: str) -> str:
