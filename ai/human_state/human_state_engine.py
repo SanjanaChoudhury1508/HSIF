@@ -152,6 +152,27 @@ class HumanStateEngine:
             ),
         }
 
+    def _validate_timestamp_order(
+        self,
+        timestamp: float | None,
+    ) -> None:
+        if timestamp is None:
+            return
+
+        history = self.state_tracker.get_history()
+        if not history:
+            return
+
+        previous_timestamp = history[-1].timestamp
+
+        if (
+            previous_timestamp is not None
+            and timestamp < previous_timestamp
+        ):
+            raise ValueError(
+                "Timestamps must be non-decreasing."
+            )
+
     def process(
         self,
         speech_result: Mapping[str, Any] | None,
@@ -230,6 +251,7 @@ class HumanStateEngine:
             observation_valid=observation_valid,
         )
 
+        self._validate_timestamp_order(timestamp)
         if self.enable_temporal_smoothing:
             state = self.temporal_smoother.smooth(state)
 

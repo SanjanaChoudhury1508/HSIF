@@ -400,3 +400,82 @@ def test_normalize_emotion_result_validates_label(
         "label": expected_label,
         "score": expected_score,
     }
+
+
+def test_out_of_order_timestamp_does_not_corrupt_smoother_baseline():
+    from ai.human_state.temporal_smoother import TemporalSmoother
+
+    engine = HumanStateEngine(
+        temporal_smoother=TemporalSmoother(alpha=0.5),
+        enable_temporal_smoothing=True,
+    )
+
+    first = engine.process(
+        make_speech_result(energy=0.02),
+        timestamp=10.0,
+    )
+    previous_baseline = engine.temporal_smoother._previous
+    previous_history = engine.get_state_history()
+
+    with pytest.raises(ValueError, match="non-decreasing"):
+        engine.process(
+            make_speech_result(energy=0.12),
+            timestamp=9.0,
+        )
+
+    assert engine.get_state_history() == previous_history
+    assert engine.get_current_state() is first
+    assert engine.temporal_smoother._previous is previous_baseline
+
+
+def test_invalid_observation_with_older_timestamp_does_not_corrupt_history():
+    engine = HumanStateEngine(enable_temporal_smoothing=True)
+
+    first = engine.process(
+        make_speech_result(),
+        timestamp=10.0,
+    )
+
+    with pytest.raises(ValueError, match="non-decreasing"):
+        engine.process(
+            make_speech_result(),
+            timestamp=9.0,
+            observation_valid=False,
+        )
+
+    assert engine.get_state_history() == [first]
+    assert engine.get_current_state() is first
+
+def test_tracker_rejection_does_not_corrupt_smoother_baseline():
+    from ai.human_state.temporal_smoother import TemporalSmoother
+
+    smoother = TemporalSmoother(alpha=0.5)
+    engine = HumanStateEngine(
+        temporal_smoother=smoother,
+        enable_temporal_smoothing=True,
+    )
+
+    # Establish the initial baseline at t=10.
+    engine.process(make_speech_result(), timestamp=10.0)
+
+    # Invalid observations enter tracker history but do not update
+    # the temporal smoother's baseline.
+    engine.process(
+        make_speech_result(),
+        timestamp=12.0,
+        observation_valid=False,
+    )
+
+    previous_baseline = smoother._previous
+    previous_history = engine.get_state_history()
+    previous_current_state = engine.get_current_state()
+
+    # The smoother accepts t=11 relative to its t=10 baseline,
+    # but the tracker must reject it because its latest timestamp is t=12.
+    with pytest.raises(ValueError, match="non-decreasing"):
+        engine.process(make_speech_result(), timestamp=11.0)
+
+    # A rejected observation must not leave internal components inconsistent.
+    assert smoother._previous is previous_baseline
+    assert engine.get_state_history() == previous_history
+    assert engine.get_current_state() is previous_current_state
