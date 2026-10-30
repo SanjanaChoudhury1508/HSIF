@@ -1,0 +1,8 @@
+{
+  "processed.wav": {
+    "reference_transcript": "Hello, this is test for speech processing pipeline.",
+    "verification_method": "manual listening to original recording.m4a",
+    "language": "en",
+    "source_audio": "tests/audio/recording.m4a"
+  }
+}

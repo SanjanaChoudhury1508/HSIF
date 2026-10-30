@@ -1,0 +1,6 @@
+﻿run_id,example_id,repeat,success,latency_seconds,reference_transcript,transcript,wer,cer,language,language_probability,error
+20261030T052436Z_3e8ed483,processed.wav,1,True,2.2088,"Hello, this is test for speech processing pipeline.","Hello, this is test for a speech processing pipeline.",0.125,0.0392,en,0.6570004224777222,
+20261030T052436Z_3e8ed483,processed.wav,2,True,1.8448,"Hello, this is test for speech processing pipeline.","Hello, this is test for a speech processing pipeline.",0.125,0.0392,en,0.6570004224777222,
+20261030T052436Z_3e8ed483,processed.wav,3,True,1.6258,"Hello, this is test for speech processing pipeline.","Hello, this is test for a speech processing pipeline.",0.125,0.0392,en,0.6570004224777222,
+20261030T052436Z_3e8ed483,processed.wav,4,True,1.675,"Hello, this is test for speech processing pipeline.","Hello, this is test for a speech processing pipeline.",0.125,0.0392,en,0.6570004224777222,
+20261030T052436Z_3e8ed483,processed.wav,5,True,1.8409,"Hello, this is test for speech processing pipeline.","Hello, this is test for a speech processing pipeline.",0.125,0.0392,en,0.6570004224777222,
