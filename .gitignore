@@ -7,3 +7,5 @@ tests/audio/*.m4a
 
 models/
 .env
+evaluation/datasets/crema-d/
+evaluation/krupa_implementation_review.txt

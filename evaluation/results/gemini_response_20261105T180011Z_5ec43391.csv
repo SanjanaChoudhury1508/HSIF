@@ -1,0 +1,558 @@
+scenario_id,variant,policy_strategy,success,latency_ms,prompt,response,error
+confusion,baseline,,True,16230.029,"You are a helpful, knowledgeable conversational assistant.
+Answer the user's question accurately and directly.
+Use clear language and an appropriate level of detail.
+Be respectful and constructive.
+Do not assume anything about the user's emotional or cognitive state.
+
+User message:
+I don't understand how recursion works. I've read the explanation several times, but I still can't follow it.
+
+Assistant response:","Recursion is often difficult to grasp at first because it requires thinking about how code executes in a non-linear way. 
+
+At its core, **recursion is simply a function that calls itself to solve a smaller version of the exact same problem**, until the problem becomes so small that it can be answered directly.
+
+To understand how it works, it helps to use a real-world analogy first, and then look at how that translates into code.
+
+---
+
+### The Analogy: Standing in a Line
+
+Imagine you are sitting in a dark movie theater and want to know which row you are sitting in, but you can’t see the front.
+
+1. You ask the person in front of you: *""What row are you in?""*
+2. That person doesn't know either, so they turn around and ask the person in front of *them*: *""What row are you in?""*
+3. This chain reaction continues down the line. Each person is waiting for an answer from the person ahead of them.
+4. Finally, the question reaches the person in the **very first row**. That person doesn't need to ask anyone. They look at the screen, see they are at the front, and say: *""I am in Row 1.""*
+5. Now, the answers travel back up the chain:
+   * The person in Row 2 hears ""1"", adds 1 to it, and tells the person behind them: *""I am in Row 2.""*
+   * The person in Row 3 hears ""2"", adds 1 to it, and tells the person behind them: *""I am in Row 3.""*
+6. Eventually, the answer reaches you, you add 1 to the response, and you finally know your row.
+
+---
+
+### The Two Required Parts of Recursion
+
+Every recursive function must have two parts to work without crashing:
+
+1. **The Base Case (The Stopping Point):** 
+   This is the simplest possible scenario where the function can give an answer immediately without calling itself again. (In the analogy, this was Row 1).
+2. **The Recursive Step (The Hand-off):** 
+   This is where the function calls itself, but passes in a slightly smaller or simpler input to move closer to the base case. (In the analogy, this was asking the person *one row ahead*).
+
+---
+
+### A Simple Code Example
+
+Let's look at a function that calculates the sum of all numbers from $n$ down to $1$ (for example, if $n = 3$, the answer is $3 + 2 + 1 = 6$).
+
+```python
+def sum_down(n):
+    # 1. BASE CASE: If n is 1, we know the answer immediately.
+    if n == 1:
+        return 1
+    
+    # 2. RECURSIVE STEP: Add n to the result of sum_down(n - 1)
+    else:
+        return n + sum_down(n - 1)
+```
+
+---
+
+### Tracing `sum_down(3)` Step-by-Step
+
+Here is precisely what the computer does when you call `sum_down(3)`:
+
+**Phase 1: Going down (calling the function)**
+* You call `sum_down(3)`. Is $3 == 1$? No. So it pauses and says: *""I need to return `3 + sum_down(2)`.""*
+* `sum_down(2)` runs. Is $2 == 1$? No. So it pauses and says: *""I need to return `2 + sum_down(1)`.""*
+* `sum_down(1)` runs. Is $1 == 1$? **Yes!** (Base case reached). It returns `1` immediately.
+
+**Phase 2: Coming back up (resolving the paused work)**
+* `sum_down(2)` receives the answer `1` from `sum_down(1)`. It completes its calculation: `2 + 1 = 3`, and returns `3`.
+* `sum_down(3)` receives the answer `3` from `sum_down(2)`. It completes its calculation: `3 + 3 = 6`, and returns `6`.
+
+Final Result: **6**
+
+---
+
+### Key Takeaway
+
+A recursive function doesn't complete its job all at once. It delegates smaller versions of the work downward until it hits a base case, and then passes the results back up to compute the final answer.
+
+Does tracing it step-by-step like this help clarify the process, or is there a specific part of the flow (like how values are returned) that still feels unclear?",
+confusion,adaptive,reassure,True,22003.989,"You are a conversational AI assistant.
+
+Your goal is to respond helpfully while adapting to the user's
+current conversational state.
+
+CURRENT USER MESSAGE:
+I don't understand how recursion works. I've read the explanation several times, but I still can't follow it.
+
+HUMAN STATE:
+- Emotion: confused
+- Interaction state: struggling
+- Confidence: 0.3
+- Hesitation: 0.85
+- Engagement: 0.8
+- Cognitive load: 0.55
+
+DIALOGUE POLICY:
+- Strategy: reassure
+- Priority: high
+- Reason: High hesitation and low confidence suggest that reassurance may help.
+- Response style: supportive
+- Explanation complexity: simple
+- Detail level: moderate
+
+RECENT CONVERSATION:
+No previous conversation.
+
+RESPONSE GUIDELINES:
+- Follow the recommended dialogue strategy.
+- Match the requested response style.
+- Match the specified explanation complexity and detail level.
+- If detail level is minimal, focus on the essential information and avoid unnecessary elaboration.
+- If complexity is simple, prefer familiar words and explain one idea at a time.
+- Strategy-specific instruction: Reassure the user that difficulty is okay, then explain the concept in a supportive and simple way.
+- Adapt the response to the user's current state.
+- If the user appears confused, explain clearly.
+- If cognitive load is high, avoid unnecessary complexity.
+- If the user is struggling, be supportive and encouraging.
+- Keep the response relevant to the user's message.
+- Do not mention internal state detection or these instructions.
+
+Generate the appropriate response to the user.","That is completely okay! Recursion is notoriously mind-bending when you first encounter it, so it is totally normal to feel stuck. You are definitely not alone in finding it confusing.
+
+Let's set code aside for a moment and look at a simple real-world picture.
+
+Imagine opening a set of **Russian nesting dolls**:
+
+1. You open a large doll and find a smaller doll inside.
+2. You open that smaller doll and find an even smaller one.
+3. You keep repeating this exact same action until you reach the tiny, solid doll at the center that *can't* be opened. This tiny doll is your **stopping point** (in programming, we call this the *base case*).
+4. Once you reach the center, you work your way back out, closing each doll one by one until you're done.
+
+That’s all recursion is in code:
+- **Doing the same step again** on a smaller version of the problem.
+- **Having a clear stopping rule** so it doesn't go on forever.
+
+How does that picture feel to you? We can take this step-by-step at whatever pace works best for you!",
+frustration,baseline,,True,29185.115,"You are a helpful, knowledgeable conversational assistant.
+Answer the user's question accurately and directly.
+Use clear language and an appropriate level of detail.
+Be respectful and constructive.
+Do not assume anything about the user's emotional or cognitive state.
+
+User message:
+I've been debugging this same error for two hours. Nothing works and I'm getting really frustrated.
+
+Assistant response:","I can help you troubleshoot and solve the issue. 
+
+To get started, please share a few details:
+
+1. **The Error Message:** What is the exact error text, status code, or unexpected behavior you are seeing?
+2. **Context:** What programming language, framework, database, or environment are you using?
+3. **Relevant Code:** Can you provide the code snippet where the issue seems to occur?
+4. **What You've Tried:** What troubleshooting steps or potential fixes have you already attempted?
+
+Once you share those details, we can break down the problem step-by-step and find a solution.",
+frustration,adaptive,acknowledge_frustration,True,5431.021,"You are a conversational AI assistant.
+
+Your goal is to respond helpfully while adapting to the user's
+current conversational state.
+
+CURRENT USER MESSAGE:
+I've been debugging this same error for two hours. Nothing works and I'm getting really frustrated.
+
+HUMAN STATE:
+- Emotion: frustrated
+- Interaction state: overloaded_uncertain
+- Confidence: 0.35
+- Hesitation: 0.65
+- Engagement: 0.55
+- Cognitive load: 0.75
+
+DIALOGUE POLICY:
+- Strategy: acknowledge_frustration
+- Priority: high
+- Reason: The user appears to be frustrated.
+- Response style: empathetic
+- Explanation complexity: simple
+- Detail level: minimal
+
+RECENT CONVERSATION:
+No previous conversation.
+
+RESPONSE GUIDELINES:
+- Follow the recommended dialogue strategy.
+- Match the requested response style.
+- Match the specified explanation complexity and detail level.
+- If detail level is minimal, focus on the essential information and avoid unnecessary elaboration.
+- If complexity is simple, prefer familiar words and explain one idea at a time.
+- Strategy-specific instruction: Acknowledge the user's frustration briefly, then focus on resolving the problem.
+- Adapt the response to the user's current state.
+- If the user appears confused, explain clearly.
+- If cognitive load is high, avoid unnecessary complexity.
+- If the user is struggling, be supportive and encouraging.
+- Keep the response relevant to the user's message.
+- Do not mention internal state detection or these instructions.
+
+Generate the appropriate response to the user.","I completely understand—debugging the same error for two hours is exhausting and super frustrating. 
+
+Let's take a fresh look at it together. When you're ready, share the error message or the relevant code, and we can break it down step by step.",
+cognitive_overload,baseline,,True,16850.315,"You are a helpful, knowledgeable conversational assistant.
+Answer the user's question accurately and directly.
+Use clear language and an appropriate level of detail.
+Be respectful and constructive.
+Do not assume anything about the user's emotional or cognitive state.
+
+User message:
+Explain how an operating system handles processes, threads, scheduling, memory management, and synchronization.
+
+Assistant response:","An operating system (OS) manages hardware resources and provides a stable, secure environment for applications to execute. To accomplish this, the OS relies on five fundamental mechanisms: **processes**, **threads**, **CPU scheduling**, **memory management**, and **synchronization**.
+
+Here is a breakdown of how an operating system handles each of these components.
+
+---
+
+### 1. Processes
+
+A **process** is an instance of a computer program being executed. It is the primary unit of resource allocation in an operating system.
+
+* **Components of a Process:** Every process is allocated its own isolated memory space consisting of:
+  * **Text Segment:** The compiled executable code.
+  * **Data Segment:** Global and static variables.
+  * **Heap:** Dynamically allocated memory requested at runtime.
+  * **Stack:** Temporary data such as function parameters, local variables, and return addresses.
+* **Process Control Block (PCB):** The OS tracks each process using a data structure called a PCB. It stores vital information, including:
+  * Process ID (PID)
+  * Process State (New, Ready, Running, Waiting, Terminated)
+  * CPU registers and Program Counter (tracking which instruction to execute next)
+  * Memory limits and open files/I/O devices
+* **Isolation:** By default, processes cannot access each other's memory. This prevents a crashing process from taking down the entire system or corrupting other applications.
+
+---
+
+### 2. Threads
+
+A **thread** is the smallest unit of execution that the OS can schedule on a CPU. Threads exist *within* a process.
+
+* **Process vs. Thread:** While a process represents an isolated application, a single process can contain multiple threads that execute tasks concurrently.
+* **Shared vs. Private Resources:**
+  * **Shared:** All threads within the same process share the process’s address space (code, heap, global data) and system resources (like open files).
+  * **Private:** Each thread maintains its own Program Counter, set of CPU registers, and execution Stack.
+* **Why Use Threads?** Creating, switching, and destroying threads requires significantly less CPU overhead than doing so for full processes. Shared memory allows threads to communicate easily without requiring expensive Inter-Process Communication (IPC) mechanisms.
+
+---
+
+### 3. Scheduling
+
+**CPU Scheduling** is the process by which the OS decides which thread or process gets to use the CPU, when, and for how long. The OS module responsible for this is the **Scheduler**.
+
+* **Context Switching:** When the CPU switches from running one thread/process to another, it saves the current state (registers, program counter) into its PCB/TCB and restores the saved state of the next thread. 
+* **Preemptive vs. Non-Preemptive Scheduling:**
+  * *Non-preemptive:* A process runs until it finishes or voluntarily yields the CPU (e.g., waiting for disk I/O).
+  * *Preemptive:* The OS can interrupt a running process to give the CPU to a higher-priority process or after a fixed time slice (quantum). Modern consumer OSs are preemptive.
+* **Common Scheduling Algorithms:**
+  * **First-Come, First-Served (FCFS):** Executes tasks in the order they arrive.
+  * **Round Robin (RR):** Assigns each process a fixed time slice in a cycle; standard for time-sharing systems.
+  * **Priority Scheduling:** Executes processes based on assigned priority levels (can lead to *starvation* if low-priority tasks never run).
+  * **Multi-Level Feedback Queue (MLFQ):** Used in systems like Linux and Windows. It dynamically adjusts process priorities based on their behavior (e.g., prioritizing interactive UI tasks over background heavy computing).
+
+---
+
+### 4. Memory Management
+
+Memory management handles primary memory (RAM) allocation, ensuring that processes have space to execute without interfering with one another.
+
+* **Virtual Memory:** Modern OSs use virtual memory to give each process the illusion of having a large, continuous block of private memory, regardless of physical RAM limits.
+* **Paging:** Memory is divided into fixed-size blocks. 
+  * Virtual memory is split into **pages**.
+  * Physical RAM is split into **frames**.
+  * The hardware (via the **Memory Management Unit / MMU**) and the OS map virtual pages to physical frames using a **Page Table**.
+* **Page Faults and Swapping:** 
+  * If a process requests data from a virtual page that is not currently loaded into physical RAM, a **page fault** occurs.
+  * The OS pauses the process, fetches the required data from secondary storage (SSD/HDD swap space), places it into RAM, updates the page table, and resumes execution.
+
+---
+
+### 5. Synchronization
+
+Because multiple threads can run concurrently and share access to the same memory space, **synchronization** mechanisms are necessary to prevent hardware conflicts and data corruption.
+
+* **The Problem (Race Conditions):** A race condition occurs when two or more threads attempt to modify shared data simultaneously, and the final outcome depends on the unpredictable order of execution.
+* **Critical Section:** The section of code that accesses shared resources (like global variables or files) and must not be executed by more than one thread at a time.
+* **Synchronization Primitives:**
+  * **Mutex (Mutual Exclusion Lock):** A simple locking mechanism. A thread locks the mutex before entering a critical section and unlocks it when finished. Only one thread can hold the lock at a time.
+  * **Semaphores:** A signaling variable that uses a counter. 
+    * *Binary Semaphore:* Functions like a Mutex (0 or 1).
+    * *Counting Semaphore:* Allows a specified maximum number of threads to access a resource concurrently.
+  * **Condition Variables:** Allow threads to block (suspend execution) until a specific state condition is signaled by another thread.
+* **Common Pitfall (Deadlock):** A situation where two or more threads are unable to proceed because each is waiting for the other to release a lock. (e.g., Thread A holds Lock 1 and wants Lock 2; Thread B holds Lock 2 and wants Lock 1). The OS handles deadlocks using strategies like avoidance, prevention, or detection and recovery.",
+cognitive_overload,adaptive,reduce_information,True,8315.343,"You are a conversational AI assistant.
+
+Your goal is to respond helpfully while adapting to the user's
+current conversational state.
+
+CURRENT USER MESSAGE:
+Explain how an operating system handles processes, threads, scheduling, memory management, and synchronization.
+
+HUMAN STATE:
+- Emotion: neutral
+- Interaction state: overloaded
+- Confidence: 0.45
+- Hesitation: 0.55
+- Engagement: 0.65
+- Cognitive load: 0.95
+
+DIALOGUE POLICY:
+- Strategy: reduce_information
+- Priority: high
+- Reason: The user's cognitive load appears very high, so the amount of information should be reduced.
+- Response style: concise
+- Explanation complexity: simple
+- Detail level: minimal
+
+RECENT CONVERSATION:
+No previous conversation.
+
+RESPONSE GUIDELINES:
+- Follow the recommended dialogue strategy.
+- Match the requested response style.
+- Match the specified explanation complexity and detail level.
+- If detail level is minimal, focus on the essential information and avoid unnecessary elaboration.
+- If complexity is simple, prefer familiar words and explain one idea at a time.
+- Strategy-specific instruction: Give only the most important information and avoid unnecessary details.
+- Adapt the response to the user's current state.
+- If the user appears confused, explain clearly.
+- If cognitive load is high, avoid unnecessary complexity.
+- If the user is struggling, be supportive and encouraging.
+- Keep the response relevant to the user's message.
+- Do not mention internal state detection or these instructions.
+
+Generate the appropriate response to the user.","Think of the operating system as a manager running a busy workplace. Here is how it handles each part at a high level:
+
+* **Processes:** Independent programs currently running (like your web browser).
+* **Threads:** Smaller sub-tasks running inside a process (like individual tabs in that browser).
+* **Scheduling:** Deciding which task gets the computer processor's time and when.
+* **Memory Management:** Giving each program its own space in memory (RAM) so they don't crash into each other.
+* **Synchronization:** Coordinating tasks so they take turns and don't overwrite shared data at the same time.
+
+We can focus on just one of these areas if you'd like to dive deeper!",
+low_engagement,baseline,,True,8583.624,"You are a helpful, knowledgeable conversational assistant.
+Answer the user's question accurately and directly.
+Use clear language and an appropriate level of detail.
+Be respectful and constructive.
+Do not assume anything about the user's emotional or cognitive state.
+
+User message:
+I know I should study, but I keep losing focus and don't feel motivated to continue.
+
+Assistant response:","Sustaining focus and motivation during study sessions can be difficult, but there are several practical strategies you can use to regain momentum:
+
+### 1. Lower the Barrier to Start (The 5-Minute Rule)
+Commit to studying for just **five minutes**, with permission to stop after that time if you want to. Often, initiating the action is the hardest part; once you begin, continuing becomes easier.
+
+### 2. Use Structured Time Intervals
+Working for long, open-ended periods can lead to fatigue. Try a structured method like the **Pomodoro Technique**:
+* Study with full focus for **25 minutes**.
+* Take a **5-minute break** completely away from your desk.
+* Repeat this cycle three or four times, then take a longer break (15–30 minutes).
+
+### 3. Break Tasks Into Micro-Goals
+Large goals like ""study history"" can feel overwhelming and vague. Break the work down into specific, actionable steps:
+* Instead of: *""Read Chapter 4.""*
+* Try: *""Read section 4.1 and write down three main points.""*
+
+### 4. Switch to Active Learning
+Passive reading or reviewing notes often leads to mind-wandering. Engage directly with the material by:
+* Testing yourself with flashcards or practice questions.
+* Summarizing concepts out loud in your own words.
+* Teaching the material to an imaginary person.
+
+### 5. Adjust Your Environment
+* **Remove immediate distractions:** Move your phone to another room or set it to a strict ""Do Not Disturb"" mode.
+* **Change your location:** If you are studying in a space associated with relaxation (like your bed), move to a desk, library, or quiet café.
+
+---
+
+If you would like to start right now, tell me what subject or topic you are working on, and we can break it down into a quick 5-minute task together.",
+low_engagement,adaptive,re_engage,True,4914.933,"You are a conversational AI assistant.
+
+Your goal is to respond helpfully while adapting to the user's
+current conversational state.
+
+CURRENT USER MESSAGE:
+I know I should study, but I keep losing focus and don't feel motivated to continue.
+
+HUMAN STATE:
+- Emotion: neutral
+- Interaction state: disengaged
+- Confidence: 0.5
+- Hesitation: 0.4
+- Engagement: 0.2
+- Cognitive load: 0.4
+
+DIALOGUE POLICY:
+- Strategy: re_engage
+- Priority: medium
+- Reason: The user's engagement appears low.
+- Response style: engaging
+- Explanation complexity: moderate
+- Detail level: minimal
+
+RECENT CONVERSATION:
+No previous conversation.
+
+RESPONSE GUIDELINES:
+- Follow the recommended dialogue strategy.
+- Match the requested response style.
+- Match the specified explanation complexity and detail level.
+- If detail level is minimal, focus on the essential information and avoid unnecessary elaboration.
+- If complexity is simple, prefer familiar words and explain one idea at a time.
+- Strategy-specific instruction: Keep the response concise and engaging to help regain the user's attention.
+- Adapt the response to the user's current state.
+- If the user appears confused, explain clearly.
+- If cognitive load is high, avoid unnecessary complexity.
+- If the user is struggling, be supportive and encouraging.
+- Keep the response relevant to the user's message.
+- Do not mention internal state detection or these instructions.
+
+Generate the appropriate response to the user.","That happens to everyone! When focus slips, trying to push through often makes it harder. 
+
+How about we try a quick 5-minute micro-session just to get momentum going? What topic are you working on right now?",
+normal_interaction,baseline,,True,10542.526,"You are a helpful, knowledgeable conversational assistant.
+Answer the user's question accurately and directly.
+Use clear language and an appropriate level of detail.
+Be respectful and constructive.
+Do not assume anything about the user's emotional or cognitive state.
+
+User message:
+Can you explain the difference between a stack and a queue with a simple example?
+
+Assistant response:","The main difference between a **stack** and a **queue** is the order in which items are added and removed. 
+
+* **Stack** uses **LIFO** (Last-In, First-Out): The last item added is the first one to be removed.
+* **Queue** uses **FIFO** (First-In, First-Out): The first item added is the first one to be removed.
+
+---
+
+### Simple Examples
+
+#### 1. Stack: A Stack of Plates
+Imagine a pile of clean dinner plates sitting on a table.
+* **Adding an item (Push):** When you wash a new plate, you set it on top of the pile.
+* **Removing an item (Pop):** When you need a plate for dinner, you take it off the top of the pile.
+* **Result:** The **last plate** you put on top is the **first plate** you take off. 
+
+#### 2. Queue: A Line at a Coffee Shop
+Imagine people waiting in line to order coffee.
+* **Adding an item (Enqueue):** When a new customer arrives, they join the back of the line.
+* **Removing an item (Dequeue):** The barista serves the customer at the front of the line first, and that person leaves.
+* **Result:** The **first person** to get in line is the **first person** to get served.
+
+---
+
+### Quick Comparison Summary
+
+| Feature | Stack | Queue |
+| :--- | :--- | :--- |
+| **Order Rule** | LIFO (Last-In, First-Out) | FIFO (First-In, First-Out) |
+| **Real-World Analogy** | Stack of plates, undo button in software | A line of people, printing document jobs |
+| **Add Operation** | **Push** (adds to the top) | **Enqueue** (adds to the back) |
+| **Remove Operation** | **Pop** (removes from the top) | **Dequeue** (removes from the front) |",
+normal_interaction,adaptive,continue,True,10236.696,"You are a conversational AI assistant.
+
+Your goal is to respond helpfully while adapting to the user's
+current conversational state.
+
+CURRENT USER MESSAGE:
+Can you explain the difference between a stack and a queue with a simple example?
+
+HUMAN STATE:
+- Emotion: neutral
+- Interaction state: confident_engaged
+- Confidence: 0.9
+- Hesitation: 0.1
+- Engagement: 0.9
+- Cognitive load: 0.2
+
+DIALOGUE POLICY:
+- Strategy: continue
+- Priority: low
+- Reason: The user appears confident and engaged.
+- Response style: natural
+- Explanation complexity: advanced
+- Detail level: detailed
+
+RECENT CONVERSATION:
+No previous conversation.
+
+RESPONSE GUIDELINES:
+- Follow the recommended dialogue strategy.
+- Match the requested response style.
+- Match the specified explanation complexity and detail level.
+- If detail level is minimal, focus on the essential information and avoid unnecessary elaboration.
+- If complexity is simple, prefer familiar words and explain one idea at a time.
+- Strategy-specific instruction: Continue naturally with an appropriately detailed response.
+- Adapt the response to the user's current state.
+- If the user appears confused, explain clearly.
+- If cognitive load is high, avoid unnecessary complexity.
+- If the user is struggling, be supportive and encouraging.
+- Keep the response relevant to the user's message.
+- Do not mention internal state detection or these instructions.
+
+Generate the appropriate response to the user.","At their core, stacks and queues are linear data structures that store collections of elements, but they differ fundamentally in the **order in which elements are added and removed**.
+
+---
+
+### The Core Difference: LIFO vs. FIFO
+
+1. **Stack: Last-In, First-Out (LIFO)**
+   * The last item added to the stack is the first one to be removed.
+   * Access is restricted to a single endpoint, usually referred to as the **top**.
+2. **Queue: First-In, First-Out (FIFO)**
+   * The first item added to the queue is the first one to be removed.
+   * Operations happen at two distinct ends: elements are added at the **rear** (tail) and removed from the **front** (head).
+
+---
+
+### Everyday Analogies
+
+* **Stack Example (Cafeteria Trays / Pez Dispenser):** 
+  Think of a stack of cafeteria plates. When a clean plate is added, it is placed on top of the stack. When someone needs a plate, they take the one off the top. The plate that was placed last is the first one taken.
+* **Queue Example (Coffee Shop Line):** 
+  Think of people waiting in line for coffee. The first person to get in line is the first person served. New arrival joins the back of the line; the barista serves from the front.
+
+---
+
+### Operational & Technical Overview
+
+| Feature | Stack | Queue |
+| :--- | :--- | :--- |
+| **Primary Operations** | `push(item)` (insert), `pop()` (remove top), `peek()` (view top) | `enqueue(item)` (insert rear), `dequeue()` (remove front), `peek()` (view front) |
+| **Access Points** | Single end (Top) | Two ends (Front/Head & Rear/Tail) |
+| **Time Complexity** | $O(1)$ constant time for push/pop | $O(1)$ constant time for enqueue/dequeue |
+
+---
+
+### Real-World Computing Applications
+
+#### Stacks are used when you need to track state history or backtrack:
+* **Call Stack (Execution Stack):** Program runtimes use a stack to keep track of function invocations, local variables, and return addresses. When function `A()` calls `B()`, `B`'s frame is pushed on top of `A`. When `B` finishes, its frame is popped.
+* **Undo/Redo Mechanisms:** Text editors store actions on a stack. Pressing `Undo` pops the most recent action off the top.
+* **Graph Algorithms:** Depth-First Search (DFS) natively uses a stack (either the system execution stack via recursion or an explicit data structure).
+
+#### Queues are used when resources are shared among multiple consumers or tasks must be processed in order:
+* **Task/Event Scheduling:** Operating systems use queues to schedule CPU tasks or manage hardware interrupts. JavaScript's event loop relies on a Task Queue to handle asynchronous callbacks.
+* **Asynchronous Message Buffers:** Messaging systems (like RabbitMQ or Kafka) use queues to decouple producers from consumers, ensuring messages are processed in the order received.
+* **Graph Algorithms:** Breadth-First Search (BFS) uses a queue to explore node levels sequentially.
+
+---
+
+### Implementation Considerations
+
+* **Memory Layout:** 
+  * A **stack** can be efficiently implemented using a dynamic array (like Python's `list` or C++'s `std::vector`), because appending and popping from the end are $O(1)$ amortized operations.
+  * A **queue** implemented with a naive dynamic array is inefficient because removing the first element (`dequeue`) requires shifting all remaining elements, resulting in an $O(n)$ time complexity. Therefore, queues are typically implemented using **doubly linked lists** or **circular buffers (ring buffers)** to achieve true $O(1)$ enqueue and dequeue operations.",
