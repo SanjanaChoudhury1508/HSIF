@@ -81,3 +81,47 @@ def test_gemini_provider_propagates_timeout(monkeypatch):
         provider.generate("Test prompt")
 
     provider.client.models.generate_content.assert_called_once()
+
+
+def test_gemini_provider_retries_transient_server_errors(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+
+    provider = GeminiProvider()
+    provider.client = Mock()
+    provider.client.models.generate_content.side_effect = [
+        errors.ServerError(503, {"error": {"message": "Unavailable"}}, None),
+        errors.ServerError(503, {"error": {"message": "Unavailable"}}, None),
+        Mock(text="Recovered response"),
+    ]
+    sleeps = []
+    monkeypatch.setattr(
+        "backend.app.services.llm.gemini_provider.time.sleep",
+        sleeps.append,
+    )
+
+    assert provider.generate("Test prompt") == "Recovered response"
+    assert provider.client.models.generate_content.call_count == 3
+    assert sleeps == [1, 2]
+
+
+def test_gemini_provider_propagates_server_error_after_retry_limit(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+
+    provider = GeminiProvider()
+    provider.client = Mock()
+    provider.client.models.generate_content.side_effect = errors.ServerError(
+        503,
+        {"error": {"message": "Unavailable"}},
+        None,
+    )
+    sleeps = []
+    monkeypatch.setattr(
+        "backend.app.services.llm.gemini_provider.time.sleep",
+        sleeps.append,
+    )
+
+    with pytest.raises(errors.ServerError):
+        provider.generate("Test prompt")
+
+    assert provider.client.models.generate_content.call_count == 3
+    assert sleeps == [1, 2]

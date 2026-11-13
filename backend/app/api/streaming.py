@@ -1,4 +1,3 @@
-
 import json
 import logging
 import tempfile
@@ -11,6 +10,8 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from starlette.concurrency import run_in_threadpool
 
 from backend.app.api.process import get_pipeline_service
+from backend.app.services.llm.gemini_provider import GeminiQuotaExceededError
+from backend.app.services.pipeline_service import NoSpeechDetectedError
 from ai.speech.streaming.chunk_processor import StreamingAudioProcessor
 
 
@@ -22,7 +23,7 @@ CHANNELS = 1
 SAMPLE_WIDTH_BYTES = 2
 MAX_AUDIO_BYTES = 10 * 1024 * 1024
 
-PARTIAL_TRANSCRIPTION_INTERVAL_SECONDS = 1.5
+PARTIAL_TRANSCRIPTION_INTERVAL_SECONDS = 3.0
 MIN_PARTIAL_AUDIO_SECONDS = 1.0
 
 
@@ -492,6 +493,21 @@ async def stream_session(websocket: WebSocket, session_id: str):
                         latency_ms=round(
                             (perf_counter() - started_at) * 1000
                         ),
+                    )
+
+                except (GeminiQuotaExceededError, NoSpeechDetectedError) as exc:
+                    await send_event(
+                        websocket,
+                        "error",
+                        session_id,
+                        turn_id=turn_id,
+                        code=(
+                            "LLM_QUOTA_EXHAUSTED"
+                            if isinstance(exc, GeminiQuotaExceededError)
+                            else "NO_SPEECH_DETECTED"
+                        ),
+                        message=str(exc),
+                        recoverable=True,
                     )
 
                 except Exception:

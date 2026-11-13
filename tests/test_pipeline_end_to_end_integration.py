@@ -1,6 +1,8 @@
 from uuid import uuid4
 from unittest.mock import Mock
+import pytest
 from backend.app.services.pipeline_service import PipelineService
+from backend.app.services.llm.gemini_provider import GeminiQuotaExceededError
 from database.repository import SessionRepository
 
 
@@ -99,5 +101,51 @@ def test_complete_pipeline_persists_turn_and_recovers_after_restart():
         # Historical recovery must not seed the temporal smoother.
         assert recovered.human_state_engine.temporal_smoother._previous is None
 
+    finally:
+        repository.clear_session(session_id)
+
+
+def test_failed_llm_request_then_retry_persists_one_turn():
+    repository = SessionRepository()
+    session_id = f"phase5-retry-{uuid4()}"
+    transcript = "Retry this failed request once."
+
+    speech_result = {
+        "transcript": transcript,
+        "language": "en",
+        "language_probability": 0.99,
+        "audio": {"duration": 1.0, "speech_duration": 0.8},
+        "vad": {"speech_segments": [{"start": 0.1, "end": 0.9}]},
+        "features": {},
+    }
+    llm_provider = Mock()
+    llm_provider.generate.side_effect = [
+        GeminiQuotaExceededError("Gemini quota is exhausted."),
+        "Recovered response.",
+    ]
+
+    try:
+        pipeline = PipelineService(
+            llm_provider=llm_provider,
+            session_id=session_id,
+            repository=repository,
+        )
+        pipeline.speech_service.process = Mock(return_value=speech_result)
+
+        with pytest.raises(GeminiQuotaExceededError):
+            pipeline.process_audio("retry-test.wav")
+
+        assert repository.get_turns(session_id, limit=10) == []
+        assert pipeline.dialogue_service.get_history() == []
+
+        result = pipeline.process_audio("retry-test.wav")
+
+        assert result["response"] == "Recovered response."
+        turns = repository.get_turns(session_id, limit=10)
+        assert len(turns) == 1
+        assert turns[0].user_message == transcript
+        assert turns[0].assistant_message == "Recovered response."
+        assert len(pipeline.dialogue_service.get_history()) == 1
+        assert llm_provider.generate.call_count == 2
     finally:
         repository.clear_session(session_id)

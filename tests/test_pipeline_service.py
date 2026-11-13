@@ -1,7 +1,10 @@
 import pytest
 from unittest.mock import Mock
 
-from backend.app.services.pipeline_service import PipelineService
+from backend.app.services.pipeline_service import (
+    NoSpeechDetectedError,
+    PipelineService,
+)
 
 
 def test_pipeline_service_stores_completed_conversation_turn():
@@ -48,6 +51,41 @@ def test_pipeline_service_stores_completed_conversation_turn():
     assert history[0]["user_message"] == "Hello, how are you?"
     assert history[0]["assistant_message"] == "This is the assistant response."
     assert history[0]["dialogue_strategy"] == result["dialogue"]["policy"]["strategy"]
+
+
+@pytest.mark.parametrize("transcript", ["", " \n\t", None])
+def test_empty_audio_transcript_stops_before_llm_or_persistence(transcript):
+    repository = Mock()
+    repository.get_turns.return_value = []
+    llm_provider = Mock()
+    service = PipelineService(
+        llm_provider=llm_provider,
+        session_id="empty-transcript-test",
+        repository=repository,
+    )
+    service.speech_service = Mock()
+    service.speech_service.process.return_value = {"transcript": transcript}
+    service.dialogue_service = Mock()
+
+    with pytest.raises(NoSpeechDetectedError, match="No speech could be transcribed"):
+        service.process_audio("test.wav")
+
+    service.dialogue_service.process.assert_not_called()
+    llm_provider.generate.assert_not_called()
+    repository.add_turn.assert_not_called()
+
+
+def test_short_nonempty_audio_transcript_is_allowed():
+    llm_provider = Mock()
+    llm_provider.generate.return_value = "Hi there."
+    service = PipelineService(llm_provider=llm_provider)
+    service.speech_service = Mock()
+    service.speech_service.process.return_value = {"transcript": " Hi "}
+
+    result = service.process_audio("test.wav")
+
+    assert result["speech"]["transcript"] == "Hi"
+    llm_provider.generate.assert_called_once()
 
 def test_pipeline_adapts_to_high_cognitive_load():
     llm_provider = Mock()

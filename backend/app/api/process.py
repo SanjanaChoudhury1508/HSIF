@@ -1,9 +1,12 @@
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-
+import logging
+from pydantic import BaseModel, Field
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
+from fastapi.concurrency import run_in_threadpool
 
 from backend.app.services.pipeline_service import PipelineService
+from backend.app.services.llm.gemini_provider import GeminiQuotaExceededError
 from backend.app.schemas.process import (
     ProcessResponse,
     HumanStateTrajectoryResponse,
@@ -11,6 +14,10 @@ from backend.app.schemas.process import (
 from database.repository import SessionRepository
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+class TextMessageRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=10000)
 
 # In-memory session store.
 # Each session gets its own PipelineService and conversation memory.
@@ -99,14 +106,18 @@ async def process_audio(
 
         pipeline_service = get_pipeline_service(session_id)
 
-        result = pipeline_service.process_audio(temp_path)
+        result = await run_in_threadpool(
+            pipeline_service.process_audio,
+            temp_path,
+        )
 
         return result
 
-    except FileNotFoundError as exc:
+    except FileNotFoundError:
+        logger.exception("Uploaded audio processing failed because a file was missing")
         raise HTTPException(
             status_code=404,
-            detail=str(exc)
+            detail="Audio file could not be processed."
         )
 
     except ValueError as exc:
@@ -115,10 +126,25 @@ async def process_audio(
             detail=str(exc)
         )
 
-    except Exception as exc:
+    except GeminiQuotaExceededError:
+        logger.warning("Audio processing stopped because Gemini quota is exhausted")
+        raise HTTPException(
+            status_code=429,
+            detail="Gemini quota is exhausted. Please try again later.",
+        )
+
+    except TimeoutError:
+        logger.warning("Audio processing timed out")
+        raise HTTPException(
+            status_code=504,
+            detail="Audio processing timed out. Please try again.",
+        )
+
+    except Exception:
+        logger.exception("Unexpected audio processing failure")
         raise HTTPException(
             status_code=500,
-            detail=f"Audio processing failed: {exc}"
+            detail="Audio processing failed. Please try again."
         )
 
     finally:
@@ -148,3 +174,56 @@ async def get_session_state(session_id: str):
             pipeline_service.human_state_engine.get_state_changes()
         ),
     }
+
+@router.post("/message")
+async def process_text_message(
+    payload: TextMessageRequest,
+    session_id: str = Query(
+        ...,
+        min_length=1,
+        description="Unique identifier for the conversation session.",
+    ),
+):
+    message = payload.message.strip()
+
+    if not message:
+        raise HTTPException(
+            status_code=400,
+            detail="Message cannot be empty.",
+        )
+
+    try:
+        pipeline_service = get_pipeline_service(session_id)
+        return pipeline_service.process_text(message)
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
+
+    except Exception:
+        logger.exception("Unexpected text processing failure")
+        raise HTTPException(
+            status_code=500,
+            detail="Text processing failed. Please try again.",
+        )
+
+@router.get("/sessions")
+def list_sessions():
+    return {
+        "sessions": repository.list_sessions()
+    }
+
+
+@router.get("/sessions/{session_id}")
+def get_session_history(session_id: str):
+    history = repository.get_session_history(session_id)
+
+    if history is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Session not found.",
+        )
+
+    return history

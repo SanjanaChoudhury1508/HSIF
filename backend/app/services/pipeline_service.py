@@ -8,6 +8,11 @@ from backend.app.services.llm.llm_service import LLMService
 
 from database.repository import SessionRepository
 
+
+class NoSpeechDetectedError(ValueError):
+    """Raised when audio processing produces no usable transcript."""
+
+
 class PipelineService:
     def __init__(
         self,
@@ -30,6 +35,18 @@ class PipelineService:
 
     def process_audio(self, audio_path):
         speech_result = self.speech_service.process(audio_path)
+        transcript = (
+            speech_result.get("transcript")
+            if isinstance(speech_result, dict)
+            else None
+        )
+        if not isinstance(transcript, str) or not transcript.strip():
+            raise NoSpeechDetectedError(
+                "No speech could be transcribed from this audio. "
+                "Try a recording with clear, audible speech."
+            )
+        transcript = transcript.strip()
+        speech_result = {**speech_result, "transcript": transcript}
 
         observation_timestamp=time.time()
         observation_valid=self._is_valid_observation(speech_result)
@@ -45,7 +62,7 @@ class PipelineService:
         )
 
         dialogue_result = self.dialogue_service.process(
-            speech_result["transcript"],
+            transcript,
             human_state
         )
 
@@ -58,7 +75,7 @@ class PipelineService:
         if self.session_id and self.repository:
             self.repository.add_turn(
                 session_id=self.session_id,
-                user_message=speech_result["transcript"],
+                user_message=transcript,
                 assistant_message=llm_response,
                 human_state=persisted_human_state,
                 dialogue_strategy=dialogue_result["policy"]["strategy"],
@@ -66,7 +83,7 @@ class PipelineService:
 
         # Update in-memory conversation history only after persistence succeeds.
         self.dialogue_service.add_response(
-            user_message=speech_result["transcript"],
+            user_message=transcript,
             assistant_message=llm_response,
             human_state=human_state,
             dialogue_strategy=dialogue_result["policy"]["strategy"],
@@ -78,6 +95,77 @@ class PipelineService:
             "dialogue": dialogue_result,
             "response": llm_response,
         }
+
+
+    def process_text(self, user_message: str):
+        """Process a typed message through the existing dialogue pipeline."""
+
+        if not isinstance(user_message, str) or not user_message.strip():
+            raise ValueError("Message cannot be empty.")
+
+        user_message = user_message.strip()
+
+        # Reuse the latest observed human state when available.
+        current_state = self.human_state_engine.get_current_state()
+
+        if current_state is not None:
+            human_state = current_state.to_dict()
+            persisted_human_state = self._build_persisted_human_state(
+                human_state,
+                current_state,
+            )
+        else:
+            # No audio observation exists yet.
+            # These are neutral fallback values, NOT measured human-state scores.
+            human_state = {
+                "emotion": {"label": "unknown", "score": 0.0},
+                "hesitation": {"score": 0.0},
+                "confidence": {"score": 0.0},
+                "engagement": {"score": 0.0},
+                "cognitive_load": {"score": 0.0},
+            }
+
+            persisted_human_state = {
+                **human_state,
+                "_temporal": {
+                    "observation_valid": False,
+                    "source": "text_only",
+                },
+            }
+
+        dialogue_result = self.dialogue_service.process(
+            user_message,
+            human_state,
+        )
+
+        llm_response = self.llm_service.generate(
+            dialogue_result["prompt"]
+        )
+
+        # Persist before updating in-memory conversation history.
+        if self.session_id and self.repository:
+            self.repository.add_turn(
+                session_id=self.session_id,
+                user_message=user_message,
+                assistant_message=llm_response,
+                human_state=persisted_human_state,
+                dialogue_strategy=dialogue_result["policy"]["strategy"],
+            )
+
+        self.dialogue_service.add_response(
+            user_message=user_message,
+            assistant_message=llm_response,
+            human_state=human_state,
+            dialogue_strategy=dialogue_result["policy"]["strategy"],
+        )
+
+        return {
+            "user_message": user_message,
+            "human_state": persisted_human_state,
+            "dialogue": dialogue_result,
+            "response": llm_response,
+        }
+
 
     @staticmethod
     def _build_persisted_human_state(

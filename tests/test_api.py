@@ -1,5 +1,6 @@
 import pytest
 from pathlib import Path
+from threading import get_ident
 from unittest.mock import Mock
 
 from fastapi.testclient import TestClient
@@ -7,6 +8,8 @@ from fastapi.testclient import TestClient
 from backend.app.main import app
 from backend.app.api.process import sessions, get_pipeline_service
 from backend.app.api import process as process_api
+from backend.app.services.pipeline_service import NoSpeechDetectedError
+from backend.app.services.llm.gemini_provider import GeminiQuotaExceededError
 
 client = TestClient(app)
 
@@ -141,6 +144,102 @@ def test_process_audio(monkeypatch):
     assert "transcript" in data["speech"]
     assert "emotion" in data["human_state"]
     assert "policy" in data["dialogue"]
+
+
+def test_audio_endpoint_runs_pipeline_in_threadpool(monkeypatch):
+    from fastapi.concurrency import run_in_threadpool as actual_threadpool
+
+    thread_ids = {}
+    pipeline = Mock()
+
+    def process_in_worker(_audio_path):
+        thread_ids["pipeline"] = get_ident()
+        return valid_process_response()
+
+    pipeline.process_audio.side_effect = process_in_worker
+    monkeypatch.setattr(
+        process_api,
+        "get_pipeline_service",
+        lambda _session_id: pipeline,
+    )
+
+    async def tracked_threadpool(function, *args, **kwargs):
+        thread_ids["route"] = get_ident()
+        return await actual_threadpool(function, *args, **kwargs)
+
+    monkeypatch.setattr(process_api, "run_in_threadpool", tracked_threadpool)
+
+    response = client.post(
+        "/api/v1/process?session_id=threadpool-test",
+        files={"audio": ("test.wav", b"audio-data", "audio/wav")},
+    )
+
+    assert response.status_code == 200
+    assert thread_ids["pipeline"] != thread_ids["route"]
+
+
+def test_empty_transcription_returns_clear_audio_error(monkeypatch):
+    pipeline = Mock()
+    pipeline.process_audio.side_effect = NoSpeechDetectedError(
+        "No speech could be transcribed from this audio."
+    )
+    monkeypatch.setattr(
+        process_api,
+        "get_pipeline_service",
+        lambda _session_id: pipeline,
+    )
+
+    response = client.post(
+        "/api/v1/process?session_id=no-speech-test",
+        files={"audio": ("test.wav", b"audio-data", "audio/wav")},
+    )
+
+    assert response.status_code == 400
+    assert "No speech could be transcribed" in response.json()["detail"]
+
+
+@pytest.mark.parametrize(
+    ("failure", "expected_status", "visible_message"),
+    [
+        (
+            GeminiQuotaExceededError("provider response includes private details"),
+            429,
+            "Gemini quota is exhausted. Please try again later.",
+        ),
+        (
+            TimeoutError("provider timeout includes private details"),
+            504,
+            "Audio processing timed out. Please try again.",
+        ),
+        (
+            RuntimeError("database unavailable"),
+            500,
+            "Audio processing failed. Please try again.",
+        ),
+    ],
+)
+def test_process_audio_sanitizes_unexpected_pipeline_failure(
+    monkeypatch,
+    failure,
+    expected_status,
+    visible_message,
+):
+    pipeline = Mock()
+    pipeline.process_audio.side_effect = failure
+    monkeypatch.setattr(
+        process_api,
+        "get_pipeline_service",
+        lambda _session_id: pipeline,
+    )
+
+    response = client.post(
+        "/api/v1/process?session_id=visible-error-test",
+        files={"audio": ("test.wav", b"audio-data", "audio/wav")},
+    )
+
+    assert response.status_code == expected_status
+    assert response.json()["detail"] == visible_message
+    assert str(failure) not in response.json()["detail"]
 
 
 def test_unsupported_audio_format():
@@ -361,6 +460,7 @@ def test_pipeline_unexpected_error_returns_500(monkeypatch):
 
     assert response.status_code == 500
     assert "Audio processing failed" in response.json()["detail"]
+    assert "Processing failed" not in response.json()["detail"]
 
 
 def test_temporary_audio_file_is_removed_after_success(monkeypatch):

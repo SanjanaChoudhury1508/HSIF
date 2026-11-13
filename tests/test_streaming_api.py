@@ -7,6 +7,8 @@ from fastapi.testclient import TestClient
 from backend.app.main import app
 from backend.app.api import streaming as streaming_api
 from backend.app.api.process import sessions
+from backend.app.services.llm.gemini_provider import GeminiQuotaExceededError
+from backend.app.services.pipeline_service import NoSpeechDetectedError
 from starlette.websockets import WebSocketDisconnect
 
 client = TestClient(app)
@@ -163,6 +165,70 @@ def test_websocket_streams_chunk_and_returns_final_events(monkeypatch):
         assert ended["type"] == "session_ended"
 
 
+def test_websocket_reports_gemini_quota_failure(monkeypatch):
+    session_id = str(uuid4())
+    pipeline = make_pipeline()
+    pipeline.process_audio.side_effect = GeminiQuotaExceededError(
+        "Gemini quota is exhausted. Check your API usage and retry after quota becomes available."
+    )
+
+    monkeypatch.setattr(
+        streaming_api,
+        "get_pipeline_service",
+        lambda _session_id: pipeline,
+    )
+
+    with client.websocket_connect(f"/ws/session/{session_id}") as websocket:
+        start_session(websocket)
+        websocket.send_bytes(b"\x00\x00")
+        assert websocket.receive_json()["type"] == "speech_chunk"
+
+        websocket.send_text(json.dumps({
+            "type": "end_turn",
+            "turn_id": "quota-turn",
+        }))
+        error = websocket.receive_json()
+
+        assert error["type"] == "error"
+        assert error["code"] == "LLM_QUOTA_EXHAUSTED"
+        assert "Gemini quota is exhausted" in error["message"]
+        assert error["recoverable"] is True
+
+        websocket.send_text(json.dumps({"type": "ping"}))
+        assert websocket.receive_json()["type"] == "pong"
+
+
+def test_websocket_reports_no_speech_and_keeps_session_usable(monkeypatch):
+    session_id = str(uuid4())
+    pipeline = make_pipeline()
+    pipeline.process_audio.side_effect = NoSpeechDetectedError(
+        "No speech could be transcribed from this audio. Try clear speech."
+    )
+    monkeypatch.setattr(
+        streaming_api,
+        "get_pipeline_service",
+        lambda _session_id: pipeline,
+    )
+
+    with client.websocket_connect(f"/ws/session/{session_id}") as websocket:
+        start_session(websocket)
+        websocket.send_bytes(b"\x00\x00" * 16000)
+        assert websocket.receive_json()["type"] == "speech_chunk"
+        websocket.send_text(json.dumps({
+            "type": "end_turn",
+            "turn_id": "no-speech-turn",
+        }))
+
+        error = websocket.receive_json()
+        assert error["type"] == "error"
+        assert error["code"] == "NO_SPEECH_DETECTED"
+        assert "No speech could be transcribed" in error["message"]
+        assert error["recoverable"] is True
+
+        websocket.send_text(json.dumps({"type": "ping"}))
+        assert websocket.receive_json()["type"] == "pong"
+
+
 def test_websocket_rejects_invalid_audio_configuration(monkeypatch):
     session_id = str(uuid4())
 
@@ -252,6 +318,91 @@ def test_websocket_handles_final_pipeline_failure(monkeypatch):
         websocket.send_text(json.dumps({"type": "ping"}))
         pong = websocket.receive_json()
         assert pong["type"] == "pong"
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        TimeoutError("Gemini request timed out."),
+        RuntimeError("Gemini server unavailable."),
+    ],
+)
+def test_websocket_llm_failure_emits_error_without_assistant_response(
+    monkeypatch,
+    failure,
+):
+    session_id = str(uuid4())
+    pipeline = make_pipeline()
+    pipeline.process_audio.side_effect = failure
+    monkeypatch.setattr(
+        streaming_api,
+        "get_pipeline_service",
+        lambda *_args, **_kwargs: pipeline,
+    )
+
+    with client.websocket_connect(f"/ws/session/{session_id}") as websocket:
+        assert start_session(websocket)["type"] == "session_ready"
+        websocket.send_bytes(b"\x00\x00")
+        assert websocket.receive_json()["type"] == "speech_chunk"
+        websocket.send_text(json.dumps({
+            "type": "end_turn",
+            "turn_id": "failed-llm-turn",
+        }))
+
+        event = websocket.receive_json()
+        assert event["type"] == "error"
+        assert event["code"] == "PIPELINE_FAILED"
+        assert event["recoverable"] is True
+
+        # If the failure had also emitted assistant_response, this read would
+        # consume it instead of the pong event.
+        websocket.send_text(json.dumps({"type": "ping"}))
+        assert websocket.receive_json()["type"] == "pong"
+
+
+def test_websocket_disconnect_discards_partial_audio_before_reconnect(
+    monkeypatch,
+):
+    session_id = str(uuid4())
+    pipeline = make_pipeline()
+    monkeypatch.setattr(
+        streaming_api,
+        "get_pipeline_service",
+        lambda *_args, **_kwargs: pipeline,
+    )
+
+    with client.websocket_connect(f"/ws/session/{session_id}") as websocket:
+        assert start_session(websocket)["type"] == "session_ready"
+        websocket.send_bytes(b"\x01\x00" * 160)
+        assert websocket.receive_json()["type"] == "speech_chunk"
+        websocket.close()
+
+    with client.websocket_connect(f"/ws/session/{session_id}") as websocket:
+        assert start_session(websocket)["type"] == "session_ready"
+        websocket.send_text(json.dumps({
+            "type": "end_turn",
+            "turn_id": "must-not-use-disconnected-audio",
+        }))
+        empty_turn = websocket.receive_json()
+        assert empty_turn["type"] == "error"
+        assert empty_turn["code"] == "EMPTY_TURN"
+        pipeline.process_audio.assert_not_called()
+
+        websocket.send_bytes(b"\x02\x00" * 160)
+        assert websocket.receive_json()["type"] == "speech_chunk"
+        websocket.send_text(json.dumps({
+            "type": "end_turn",
+            "turn_id": "fresh-turn",
+        }))
+
+        events = [websocket.receive_json() for _ in range(4)]
+        assert [event["type"] for event in events] == [
+            "transcript_final",
+            "human_state_update",
+            "dialogue_strategy",
+            "assistant_response",
+        ]
+        pipeline.process_audio.assert_called_once()
 
 
 def test_websocket_handles_invalid_json():
