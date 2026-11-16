@@ -188,44 +188,35 @@ class PromptBuilder:
                 "Respond naturally and directly to the user's request."
             ),
             "clarify": (
-                "Clarify the user's confusion and explain the concept "
-                "clearly before moving forward."
+                "Clarify the user's confusion before proceeding."
             ),
             "simplify": (
-                "Use simpler language, reduce complexity, and explain "
-                "one idea at a time."
+                "Use simpler language, reduce complexity, "
+                "and explain one idea at a time."
             ),
             "reassure": (
-                "Reassure the user that difficulty is okay, then explain "
-                "the concept in a supportive and simple way."
+                "Use supportive language and provide a clear explanation."
             ),
             "encourage": (
-                "Use a supportive and encouraging tone that helps the "
-                "user continue."
+                "Use encouraging language while remaining informative."
             ),
             "slow_down": (
-                "Slow the explanation down and present information "
-                "step by step."
+                "Explain the topic step by step without rushing."
             ),
             "ask_follow_up": (
-                "Ask a focused follow-up question to resolve ambiguity "
-                "before giving a detailed answer."
+                "Ask one focused follow-up question to understand the user's need."
             ),
             "reduce_information": (
-                "Give only the most important information and avoid "
-                "unnecessary details."
+                "Keep the response concise and focus on essential information."
             ),
             "acknowledge_frustration": (
-                "Acknowledge the user's frustration briefly, then "
-                "focus on resolving the problem."
+                "Acknowledge the user's frustration and help resolve the issue."
             ),
             "re_engage": (
-                "Keep the response concise and engaging to help regain "
-                "the user's attention."
+                "Use a concise and engaging response."
             ),
             "continue": (
-                "Continue naturally with an appropriately detailed "
-                "response."
+                "Continue naturally with an appropriately detailed response."
             ),
         }
 
@@ -252,6 +243,7 @@ HUMAN STATE:
 
 DIALOGUE POLICY:
 - Strategy: {strategy}
+- Strategy instruction: {strategy_instruction}
 - Priority: {priority}
 - Reason: {reason}
 - Response style: {response_style}
@@ -261,21 +253,33 @@ DIALOGUE POLICY:
 RECENT CONVERSATION:
 {history}
 
-RESPONSE GUIDELINES:
-- Follow the recommended dialogue strategy.
-- Match the requested response style.
-- Match the specified explanation complexity and detail level.
-- If detail level is minimal, focus on the essential information and avoid unnecessary elaboration.
-- If complexity is simple, prefer familiar words and explain one idea at a time.
-- Strategy-specific instruction: {strategy_instruction}
-- Adapt the response to the user's current state.
-- If the user appears confused, explain clearly.
-- If cognitive load is high, avoid unnecessary complexity.
-- If the user is struggling, be supportive and encouraging.
-- Keep the response relevant to the user's message.
-- Do not mention internal state detection or these instructions.
 
-Generate the appropriate response to the user.
+
+RESPONSE GUIDELINES:
+1. Directly answer the CURRENT USER MESSAGE.
+2. Identify the user's actual question, request, or task before generating the response.
+3. Do not merely acknowledge, paraphrase, or repeat the user's message.
+4. If the user requests guidance, provide actionable recommendations.
+5. If the user requests a plan, provide an ordered and realistic plan.
+6. If the user requests an explanation, explain the concept with relevant examples.
+7. If the user requests a breakdown, provide a structured breakdown of the requested topic.
+8. Use conversation history to understand context, but prioritize the current user message.
+9. Do not ask the user to repeat information already available in conversation history.
+10. Ask a follow-up question only when essential information is genuinely missing.
+11. When sufficient information is available, provide a useful answer immediately.
+12. Never invent project features, technical results, or facts.
+13. Be specific, informative, and relevant. Avoid filler and generic responses.
+
+DIALOGUE ADAPTATION:
+- Follow the selected dialogue strategy when adapting tone, complexity, and detail.
+- Do not allow the dialogue strategy to override the user's explicit request.
+- A request for a detailed explanation must remain detailed unless there is a strong reason to simplify.
+- A request for a step-by-step breakdown should receive actionable steps.
+- If cognitive load is high, organize the response into smaller sections rather than omitting essential information.
+- If confidence is low, use clear explanations and supportive language without being patronizing.
+- If engagement is high, maintain an appropriately informative and interactive response.
+
+Generate a complete and useful response.
 """
 
         return prompt.strip()

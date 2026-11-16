@@ -202,6 +202,16 @@ async def process_text_message(
             detail=str(exc),
         )
 
+    except GeminiQuotaExceededError:
+        logger.warning("Text processing stopped because Gemini quota is exhausted")
+        raise HTTPException(
+            status_code=429,
+            detail=(
+                "The AI request quota has been reached. "
+                "Please try again later."
+            ),
+        )
+
     except Exception:
         logger.exception("Unexpected text processing failure")
         raise HTTPException(

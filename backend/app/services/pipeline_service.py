@@ -60,6 +60,13 @@ class PipelineService:
             human_state,
             current_state,
         )
+        if current_state is None:
+            persisted_human_state["_temporal"] = {
+                "timestamp": observation_timestamp,
+                "observation_valid": observation_valid,
+                "source": "audio",
+            }
+        human_state = persisted_human_state
 
         dialogue_result = self.dialogue_service.process(
             transcript,
@@ -114,6 +121,7 @@ class PipelineService:
                 human_state,
                 current_state,
             )
+            human_state = persisted_human_state
         else:
             # No audio observation exists yet.
             # These are neutral fallback values, NOT measured human-state scores.
@@ -125,13 +133,14 @@ class PipelineService:
                 "cognitive_load": {"score": 0.0},
             }
 
-            persisted_human_state = {
+            human_state = {
                 **human_state,
                 "_temporal": {
                     "observation_valid": False,
                     "source": "text_only",
                 },
             }
+            persisted_human_state = dict(human_state)
 
         dialogue_result = self.dialogue_service.process(
             user_message,

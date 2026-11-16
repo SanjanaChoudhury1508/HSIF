@@ -110,6 +110,45 @@ def test_confident_engaged_state():
     assert result["needs_encouragement"] is False
 
 
+def test_invalid_text_only_observation_uses_neutral_dialogue_state():
+    from ai.dialogue.policy.dialogue_policy import DialoguePolicy
+
+    human_state = {
+        **make_human_state(
+            emotion="unknown",
+            emotion_score=0.0,
+            hesitation=0.0,
+            confidence=0.0,
+            engagement=0.0,
+            cognitive_load=0.0,
+        ),
+        "_temporal": {
+            "source": "text_only",
+            "observation_valid": False,
+        },
+    }
+
+    fused = StateFusion.fuse_to_dict(human_state)
+
+    assert fused["emotion"] == "unknown"
+    assert fused["interaction_state"] == "neutral"
+    assert fused["needs_clarification"] is False
+    assert fused["needs_encouragement"] is False
+    assert DialoguePolicy.decide_to_dict(fused)["strategy"] == "normal_response"
+
+
+def test_valid_audio_observation_keeps_existing_fusion_rules():
+    human_state = {
+        **make_human_state(engagement=0.2),
+        "_temporal": {"source": "audio", "observation_valid": True},
+    }
+
+    result = StateFusion.fuse_to_dict(human_state)
+
+    assert result["interaction_state"] == "disengaged"
+    assert result["needs_encouragement"] is True
+
+
 def test_none_input_is_safe():
     result = StateFusion.fuse_to_dict(None)
 

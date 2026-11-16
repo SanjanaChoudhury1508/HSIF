@@ -240,20 +240,30 @@ test("non-recoverable WebSocket errors invoke microphone cleanup", async () => {
   );
 });
 
-test("chat renders upload and stream errors visibly apart from status", () => {
+test("chat visibly renders the safe Gemini quota detail from the message API", async () => {
+  const quotaMessage = "The AI request quota has been reached. Please try again later.";
   const html = renderToStaticMarkup(React.createElement(ChatFeedback, {
     uploadError: "Upload failed clearly.",
-    streamError: "Gemini quota is exhausted.",
+    streamError: quotaMessage,
     uploading: false,
     isRecording: false,
     status: "ready",
     isWebSocketOpen: false,
   }));
+  const hook = await readFile(
+    resolve(frontendRoot, "src/hooks/useStreamingSession.js"),
+    "utf8",
+  );
 
   assert.match(html, /class="chat-errors"/);
   assert.match(html, /role="alert"[^>]*>Upload failed clearly\./);
-  assert.match(html, /role="alert"[^>]*>Gemini quota is exhausted\./);
+  assert.ok(html.includes(`role="alert">${quotaMessage}</p>`));
   assert.match(html, /role="status"[^>]*>Ready/);
+  assert.match(
+    hook,
+    /if \(!response\.ok\)\s*\{\s*throw new Error\(\s*data\.detail \|\| "Message processing failed\."\s*\);/s,
+  );
+  assert.match(hook, /setError\(err\.message \|\| "Could not send message\."\)/);
 });
 
 test("chat feedback CSS is visible and spans the controls on narrow layouts", async () => {

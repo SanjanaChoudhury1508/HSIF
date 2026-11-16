@@ -1,3 +1,4 @@
+
 """
 state_fusion.py
 
@@ -11,6 +12,7 @@ This module interprets those signals together so that the
 Dialogue Policy Engine can decide how the AI should respond.
 """
 
+import math
 from dataclasses import dataclass, asdict
 from typing import Any, Dict, Mapping
 
@@ -45,15 +47,15 @@ class StateFusion:
 
     @staticmethod
     def _clamp(value: Any, default: float = 0.5) -> float:
-        """Convert a value to a safe score between 0.0 and 1.0."""
+        """Convert a value to a safe finite score between 0.0 and 1.0."""
 
         try:
             score = float(value)
-        except (TypeError, ValueError):
-            score = default
+        except (TypeError, ValueError, OverflowError):
+            return default
 
-        if score != score:
-            score = default
+        if not math.isfinite(score):
+            return default
 
         return round(max(0.0, min(score, 1.0)), 3)
 
@@ -72,6 +74,53 @@ class StateFusion:
 
         return cls._clamp(component.get("score"))
 
+    @staticmethod
+    def _has_valid_observation(
+        human_state: Mapping[str, Any],
+    ) -> bool:
+        """
+        Determine whether the HSR contains a valid observation.
+
+        Text-only interactions do not provide audio-derived
+        measurements of hesitation, confidence, engagement,
+        or cognitive load.
+        """
+
+        temporal = human_state.get("_temporal")
+
+        if not isinstance(temporal, Mapping):
+            return True
+
+        if temporal.get("observation_valid") is False:
+            return False
+
+        if temporal.get("source") == "text_only":
+            return False
+
+        return True
+
+    @classmethod
+    def _neutral_state(cls) -> DialogueState:
+        """
+        Return a neutral state when no valid HSR observation exists.
+
+        The 0.5 values are internal neutral defaults, not measured
+        user characteristics. The frontend should display these
+        metrics as unavailable when the observation is invalid.
+        """
+
+        return DialogueState(
+            emotion="unknown",
+            emotion_score=0.0,
+            hesitation=0.5,
+            confidence=0.5,
+            engagement=0.5,
+            cognitive_load=0.5,
+            interaction_state="neutral",
+            needs_clarification=False,
+            needs_encouragement=False,
+        )
+
     @classmethod
     def fuse(
         cls,
@@ -79,16 +128,6 @@ class StateFusion:
     ) -> DialogueState:
         """
         Fuse Human State signals into a dialogue-oriented state.
-
-        Parameters
-        ----------
-        human_state:
-            Dictionary representation of HumanState.
-
-        Returns
-        -------
-        DialogueState
-            Combined state used by the Dialogue Policy Engine.
         """
 
         if human_state is None:
@@ -98,6 +137,11 @@ class StateFusion:
             raise TypeError(
                 "human_state must be a dictionary-like Mapping."
             )
+
+        # Do not interpret missing or invalid measurements as
+        # genuine low-confidence or low-engagement observations.
+        if not cls._has_valid_observation(human_state):
+            return cls._neutral_state()
 
         emotion = human_state.get("emotion", {})
 
@@ -136,27 +180,18 @@ class StateFusion:
             "cognitive_load",
         )
 
-        # High hesitation + low confidence suggests that
-        # the user may be struggling with the interaction.
         struggling = (
             hesitation >= 0.6
             and confidence <= 0.45
         )
 
-        # High cognitive load combined with low confidence
-        # suggests that the user may need simpler guidance
-        # and encouragement.
         overloaded_uncertain = (
             cognitive_load >= 0.7
             and confidence < 0.4
         )
 
-        # High cognitive load suggests that the user may
-        # benefit from a simpler response.
         overloaded = cognitive_load >= 0.7
 
-        # Low engagement suggests that the system may need
-        # to regain the user's attention.
         disengaged = engagement <= 0.3
 
         if overloaded_uncertain:

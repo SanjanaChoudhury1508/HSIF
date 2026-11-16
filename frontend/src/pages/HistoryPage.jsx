@@ -28,15 +28,15 @@ function formatLabel(value) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function Score({ label, value }) {
-  const valid = isValidScore(value);
+function Score({ label, value, observationValid = true }) {
+  const valid = observationValid && isValidScore(value);
   const score = valid ? value : null;
 
   return (
     <div className="history-score">
       <div className="history-score-heading">
         <span>{label}</span>
-        <strong>{valid ? `${Math.round(score * 100)}%` : "—"}</strong>
+        <strong>{valid ? `${Math.round(score * 100)}%` : "N/A"}</strong>
       </div>
       <div className="history-score-track">
         <span
@@ -308,7 +308,10 @@ export default function HistoryPage() {
                 </div>
 
                 <div className="history-messages">
-                  {selectedSession.turns.map((turn) => (
+                  {selectedSession.turns.map((turn) => {
+                    const observationValid =
+                      turn.human_state?._temporal?.observation_valid !== false;
+                    return (
                     <article className="history-turn" key={turn.id}>
                       <div className="history-message user">
                         <span className="history-message-label">
@@ -334,23 +337,32 @@ export default function HistoryPage() {
                       {turn.human_state && (
                         <div className="history-state">
                           <strong>Human state analysis</strong>
+                          {!observationValid && (
+                            <p className="history-emotion">
+                              Not measured for this text-only interaction.
+                            </p>
+                          )}
 
                           <div className="history-score-grid">
                             <Score
                               label="Confidence"
                               value={turn.human_state.confidence?.score}
+                              observationValid={observationValid}
                             />
                             <Score
                               label="Engagement"
                               value={turn.human_state.engagement?.score}
+                              observationValid={observationValid}
                             />
                             <Score
                               label="Hesitation"
                               value={turn.human_state.hesitation?.score}
+                              observationValid={observationValid}
                             />
                             <Score
                               label="Cognitive load"
                               value={turn.human_state.cognitive_load?.score}
+                              observationValid={observationValid}
                             />
                           </div>
 
@@ -360,20 +372,24 @@ export default function HistoryPage() {
                             <p className="history-emotion">
                               Emotion:{" "}
                               <strong>
-                                {formatLabel(
-                                  turn.human_state.emotion.label
-                                )}
+                                {observationValid
+                                  ? formatLabel(turn.human_state.emotion.label)
+                                  : "Not measured"}
                               </strong>
                               {" · "}
-                              {isValidScore(turn.human_state.emotion.score)
+                              {observationValid &&
+                              isValidScore(turn.human_state.emotion.score)
                                 ? `${Math.round(turn.human_state.emotion.score * 100)}% score`
-                                : "Score unavailable"}
+                                : observationValid
+                                  ? "Score unavailable"
+                                  : "Not measured"}
                             </p>
                           )}
                         </div>
                       )}
                     </article>
-                  ))}
+                    );
+                  })}
                 </div>
               </>
             ) : (

@@ -96,6 +96,8 @@ def test_pipeline_adapts_to_high_cognitive_load():
     service.speech_service.process = Mock(
         return_value={
             "transcript": "There is too much information and I am getting confused.",
+            "audio": {"duration": 1.0, "speech_duration": 0.8},
+            "vad": {"speech_segments": [{"start": 0.0, "end": 0.8}]},
         }
     )
 
@@ -143,6 +145,8 @@ def test_pipeline_adapts_to_frustration():
     service.speech_service.process = Mock(
         return_value={
             "transcript": "This is frustrating. I still cannot understand it.",
+            "audio": {"duration": 1.0, "speech_duration": 0.8},
+            "vad": {"speech_segments": [{"start": 0.0, "end": 0.8}]},
         }
     )
 
@@ -661,3 +665,28 @@ def test_pipeline_does_not_persist_or_add_dialogue_memory_on_llm_timeout():
 
     repository.add_turn.assert_not_called()
     service.dialogue_service.add_response.assert_not_called()
+
+
+def test_text_only_message_passes_invalid_observation_metadata_to_dialogue():
+    repository = Mock()
+    repository.get_turns.return_value = []
+    llm_provider = Mock()
+    llm_provider.generate.return_value = "A normal response."
+    service = PipelineService(
+        llm_provider=llm_provider,
+        session_id="text-only-neutral-state-test",
+        repository=repository,
+    )
+
+    result = service.process_text("Explain this topic.")
+
+    assert result["dialogue"]["dialogue_state"]["emotion"] == "unknown"
+    assert result["dialogue"]["dialogue_state"]["interaction_state"] == "neutral"
+    assert result["dialogue"]["dialogue_state"]["needs_clarification"] is False
+    assert result["dialogue"]["dialogue_state"]["needs_encouragement"] is False
+    assert result["dialogue"]["policy"]["strategy"] == "normal_response"
+    assert result["human_state"]["_temporal"]["source"] == "text_only"
+    assert result["human_state"]["_temporal"]["observation_valid"] is False
+    repository.add_turn.assert_called_once()
+    persisted_state = repository.add_turn.call_args.kwargs["human_state"]
+    assert persisted_state["_temporal"]["observation_valid"] is False

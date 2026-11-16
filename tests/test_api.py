@@ -198,6 +198,32 @@ def test_empty_transcription_returns_clear_audio_error(monkeypatch):
     assert "No speech could be transcribed" in response.json()["detail"]
 
 
+def test_text_message_maps_gemini_quota_to_safe_http_429(monkeypatch):
+    provider_error = GeminiQuotaExceededError(
+        "RESOURCE_EXHAUSTED: private provider details and credentials"
+    )
+    pipeline = Mock()
+    pipeline.process_text.side_effect = provider_error
+    monkeypatch.setattr(
+        process_api,
+        "get_pipeline_service",
+        lambda _session_id: pipeline,
+    )
+
+    response = client.post(
+        "/api/v1/message?session_id=quota-error-test",
+        json={"message": "Please explain this."},
+    )
+
+    assert response.status_code == 429
+    assert response.json() == {
+        "detail": "The AI request quota has been reached. Please try again later."
+    }
+    assert "RESOURCE_EXHAUSTED" not in response.text
+    assert "private provider details" not in response.text
+    pipeline.process_text.assert_called_once_with("Please explain this.")
+
+
 @pytest.mark.parametrize(
     ("failure", "expected_status", "visible_message"),
     [
