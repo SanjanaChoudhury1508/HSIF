@@ -26,7 +26,14 @@ def test_complete_pipeline_persists_turn_and_recovers_after_restart():
                 {"start": 0.1, "end": 1.7},
             ],
         },
-        "features": {},
+        "features": {
+            "mean_pitch": 180.0,
+            "min_pitch": 140.0,
+            "max_pitch": 220.0,
+            "mean_energy": 0.08,
+            "std_pitch": 24.0,
+            "std_energy": 0.02,
+        },
     }
 
     llm_provider = Mock()

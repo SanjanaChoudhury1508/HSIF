@@ -1,0 +1,204 @@
+{
+  "id": "fig_2_4_audio_upload_workflow",
+  "number": "2.4",
+  "category": "workflows",
+  "title": "Audio upload processing workflow",
+  "caption": "Figure 2.4. REST audio-upload path from validation through successful turn persistence.",
+  "explanation": "The upload route accepts supported extensions up to 25 MiB, creates a temporary file, and runs synchronous processing in a thread pool. The speech service converts to 16 kHz mono PCM, detects speech, transcribes, and extracts VAD-aligned features. Blank transcripts stop before dialogue generation. Successful LLM results are persisted; temporary files are cleaned up.",
+  "nodes": [
+    {
+      "id": "upload",
+      "label": "Multipart audio upload",
+      "row": 0,
+      "col": 0
+    },
+    {
+      "id": "validate",
+      "label": "Extension + 25 MiB validation",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "temp",
+      "label": "Temporary file",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "convert",
+      "label": "ffmpeg: 16 kHz mono s16 PCM",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "vad",
+      "label": "VAD: 30 ms frames, RMS .01",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "whisper",
+      "label": "Faster-Whisper base, CPU/int8",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "features",
+      "label": "Features from VAD speech segments",
+      "row": 2,
+      "col": 0
+    },
+    {
+      "id": "check",
+      "label": "Transcript and observation validity",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "hsr",
+      "label": "HumanStateEngine + temporal state",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "policy",
+      "label": "State fusion + dialogue policy",
+      "row": 3,
+      "col": 2
+    },
+    {
+      "id": "llm",
+      "label": "Configured LLM provider",
+      "row": 3,
+      "col": 1
+    },
+    {
+      "id": "persist",
+      "label": "Persist successful turn",
+      "row": 4,
+      "col": 2
+    },
+    {
+      "id": "response",
+      "label": "ProcessResponse to frontend",
+      "row": 4,
+      "col": 0
+    },
+    {
+      "id": "cleanup",
+      "label": "Remove temporary files",
+      "row": 4,
+      "col": 1
+    },
+    {
+      "id": "failure",
+      "label": "No-speech or provider failure: no successful turn",
+      "row": 3,
+      "col": 0
+    }
+  ],
+  "edges": [
+    {
+      "from": "upload",
+      "to": "validate",
+      "label": "multipart"
+    },
+    {
+      "from": "validate",
+      "to": "temp",
+      "label": "valid file"
+    },
+    {
+      "from": "temp",
+      "to": "convert",
+      "label": "process in thread pool"
+    },
+    {
+      "from": "convert",
+      "to": "vad",
+      "label": "converted audio"
+    },
+    {
+      "from": "vad",
+      "to": "whisper",
+      "label": "audio + speech intervals"
+    },
+    {
+      "from": "whisper",
+      "to": "features",
+      "label": "transcript"
+    },
+    {
+      "from": "features",
+      "to": "check",
+      "label": "features/timing"
+    },
+    {
+      "from": "check",
+      "to": "hsr",
+      "label": "nonempty transcript"
+    },
+    {
+      "from": "check",
+      "to": "failure",
+      "label": "empty transcript"
+    },
+    {
+      "from": "hsr",
+      "to": "policy",
+      "label": "state + validity"
+    },
+    {
+      "from": "policy",
+      "to": "llm",
+      "label": "prompt"
+    },
+    {
+      "from": "llm",
+      "to": "persist",
+      "label": "generation succeeds"
+    },
+    {
+      "from": "llm",
+      "to": "failure",
+      "label": "generation fails"
+    },
+    {
+      "from": "persist",
+      "to": "cleanup",
+      "label": "finally cleanup"
+    },
+    {
+      "from": "failure",
+      "to": "cleanup",
+      "label": "finally cleanup"
+    },
+    {
+      "from": "cleanup",
+      "to": "response",
+      "label": "response after cleanup"
+    }
+  ],
+  "references": [
+    "backend/app/api/process.py:process_audio",
+    "backend/app/services/pipeline_service.py:process_audio",
+    "ai/speech/speech_service.py:process",
+    "ai/speech/preprocessing/audio_processor.py:convert_to_wav",
+    "ai/speech/vad/detector.py",
+    "ai/speech/whisper/transcriber.py",
+    "ai/speech/feature_extraction/acoustic_features.py",
+    "database/repository.py:add_turn"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 798,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

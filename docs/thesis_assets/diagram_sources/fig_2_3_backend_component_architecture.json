@@ -1,0 +1,153 @@
+{
+  "id": "fig_2_3_backend_component_architecture",
+  "number": "2.3",
+  "category": "architecture",
+  "title": "Backend component architecture",
+  "caption": "Figure 2.3. Backend modules involved in processing and persistence.",
+  "explanation": "FastAPI route handlers dispatch work to PipelineService. Audio turns pass through SpeechService; valid observations reach HumanStateEngine and temporal tracking. DialogueService fuses state, selects policy, constructs context, and calls LLMService. Successful turns are stored through SessionRepository.",
+  "nodes": [
+    {
+      "id": "routes",
+      "label": "process.py / streaming.py routes",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "pipeline",
+      "label": "PipelineService",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "speech",
+      "label": "SpeechService / preprocessing / VAD / Whisper",
+      "row": 2,
+      "col": 0
+    },
+    {
+      "id": "features",
+      "label": "AcousticFeatureExtractor",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "engine",
+      "label": "HumanStateEngine",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "tracker",
+      "label": "TemporalSmoother / StateTracker",
+      "row": 3,
+      "col": 0
+    },
+    {
+      "id": "dialogue",
+      "label": "DialogueService / StateFusion",
+      "row": 3,
+      "col": 1
+    },
+    {
+      "id": "policy",
+      "label": "DialoguePolicy",
+      "row": 3,
+      "col": 2
+    },
+    {
+      "id": "llm",
+      "label": "LLMService / GroqProvider / GeminiProvider",
+      "row": 4,
+      "col": 1
+    },
+    {
+      "id": "repo",
+      "label": "SessionRepository",
+      "row": 4,
+      "col": 2
+    },
+    {
+      "id": "db",
+      "label": "SQLAlchemy models / PostgreSQL",
+      "row": 5,
+      "col": 2
+    }
+  ],
+  "edges": [
+    {
+      "from": "routes",
+      "to": "pipeline",
+      "label": "dispatch"
+    },
+    {
+      "from": "pipeline",
+      "to": "speech",
+      "label": "audio path"
+    },
+    {
+      "from": "speech",
+      "to": "features",
+      "label": "VAD segments"
+    },
+    {
+      "from": "features",
+      "to": "engine",
+      "label": "features and timing"
+    },
+    {
+      "from": "engine",
+      "to": "tracker",
+      "label": "state"
+    },
+    {
+      "from": "tracker",
+      "to": "dialogue",
+      "label": "state + validity"
+    },
+    {
+      "from": "dialogue",
+      "to": "policy",
+      "label": "fused state"
+    },
+    {
+      "from": "policy",
+      "to": "llm",
+      "label": "prompt context"
+    },
+    {
+      "from": "pipeline",
+      "to": "repo",
+      "label": "successful turn"
+    },
+    {
+      "from": "repo",
+      "to": "db",
+      "label": "ORM operations"
+    }
+  ],
+  "references": [
+    "backend/app/api/process.py",
+    "backend/app/api/streaming.py",
+    "backend/app/services/pipeline_service.py",
+    "ai/speech/speech_service.py",
+    "ai/speech/feature_extraction/acoustic_features.py",
+    "ai/human_state/human_state_engine.py",
+    "ai/human_state/temporal_smoother.py",
+    "ai/human_state/state_tracker.py",
+    "ai/dialogue/dialogue_service.py",
+    "ai/dialogue/policy/dialogue_policy.py",
+    "database/repository.py"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 932,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

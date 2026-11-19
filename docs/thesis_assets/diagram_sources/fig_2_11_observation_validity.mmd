@@ -1,0 +1,17 @@
+flowchart LR
+  %% Figure 2.11: Human-state observation validity
+  audio_valid["Valid audio features"]
+  audio_invalid["Audio present; required features unusable"]
+  text["Text-only request"]
+  measured["Observation valid; emotion may be Neutral"]
+  unmeasured["Not measured / unknown; observation_valid=false"]
+  source["Text source=text_only; invalid audio remains audio-sourced"]
+  fusion["Do not fuse unmeasured values as fresh observations"]
+  ui["UI says Not measured; hides emotion meters"]
+  audio_valid -->|valid features| measured
+  audio_invalid -->|invalid features| unmeasured
+  text -->|no audio observation| unmeasured
+  measured -->|measured state| fusion
+  unmeasured -->|retain source metadata| source
+  source -->|validity-aware handling| fusion
+  fusion -->|display state| ui

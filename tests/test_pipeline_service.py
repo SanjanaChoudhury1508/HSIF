@@ -5,6 +5,7 @@ from backend.app.services.pipeline_service import (
     NoSpeechDetectedError,
     PipelineService,
 )
+from backend.app.services.llm.errors import LLMIncompleteResponseError
 
 
 def test_pipeline_service_stores_completed_conversation_turn():
@@ -53,6 +54,46 @@ def test_pipeline_service_stores_completed_conversation_turn():
     assert history[0]["dialogue_strategy"] == result["dialogue"]["policy"]["strategy"]
 
 
+def test_pipeline_persists_full_provider_response_without_truncation():
+    full_response = "# Full answer\n\n" + ("A complete paragraph. " * 180) + "**The final point is complete.**"
+    repository = Mock()
+    repository.get_turns.return_value = []
+    llm_provider = Mock()
+    llm_provider.generate.return_value = full_response
+    service = PipelineService(
+        llm_provider=llm_provider,
+        session_id="full-response-test",
+        repository=repository,
+    )
+
+    result = service.process_text("Please give a detailed explanation.")
+
+    assert result["response"] == full_response
+    repository.add_turn.assert_called_once()
+    assert repository.add_turn.call_args.kwargs["assistant_message"] == full_response
+    assert service.dialogue_service.get_history()[0]["assistant_message"] == full_response
+
+
+def test_pipeline_does_not_persist_a_truncated_provider_response():
+    repository = Mock()
+    repository.get_turns.return_value = []
+    llm_provider = Mock()
+    llm_provider.generate.side_effect = LLMIncompleteResponseError(
+        "The AI response was cut off before it finished. Please try again."
+    )
+    service = PipelineService(
+        llm_provider=llm_provider,
+        session_id="truncated-response-test",
+        repository=repository,
+    )
+
+    with pytest.raises(LLMIncompleteResponseError):
+        service.process_text("Please give a detailed explanation.")
+
+    repository.add_turn.assert_not_called()
+    assert service.dialogue_service.get_history() == []
+
+
 @pytest.mark.parametrize("transcript", ["", " \n\t", None])
 def test_empty_audio_transcript_stops_before_llm_or_persistence(transcript):
     repository = Mock()
@@ -98,6 +139,7 @@ def test_pipeline_adapts_to_high_cognitive_load():
             "transcript": "There is too much information and I am getting confused.",
             "audio": {"duration": 1.0, "speech_duration": 0.8},
             "vad": {"speech_segments": [{"start": 0.0, "end": 0.8}]},
+            "features": {"mean_pitch": 180, "min_pitch": 140, "max_pitch": 220, "mean_energy": 0.08},
         }
     )
 
@@ -147,6 +189,7 @@ def test_pipeline_adapts_to_frustration():
             "transcript": "This is frustrating. I still cannot understand it.",
             "audio": {"duration": 1.0, "speech_duration": 0.8},
             "vad": {"speech_segments": [{"start": 0.0, "end": 0.8}]},
+            "features": {"mean_pitch": 180, "min_pitch": 140, "max_pitch": 220, "mean_energy": 0.08},
         }
     )
 
@@ -324,6 +367,7 @@ def test_persisted_human_state_includes_temporal_metadata():
     assert persisted["_temporal"] == {
         "timestamp": 123.5,
         "observation_valid": False,
+        "source": "audio",
     }
 
 
@@ -488,6 +532,7 @@ def test_process_audio_persists_temporal_metadata():
     assert saved_state["_temporal"] == {
         "timestamp": 123.0,
         "observation_valid": True,
+        "source": "audio",
     }
 
 @pytest.mark.parametrize(
@@ -690,3 +735,161 @@ def test_text_only_message_passes_invalid_observation_metadata_to_dialogue():
     repository.add_turn.assert_called_once()
     persisted_state = repository.add_turn.call_args.kwargs["human_state"]
     assert persisted_state["_temporal"]["observation_valid"] is False
+
+
+def test_text_turn_after_audio_does_not_reuse_previous_emotion_measurement():
+    repository = Mock()
+    repository.get_turns.return_value = []
+    llm_provider = Mock()
+    llm_provider.generate.return_value = "A response."
+    service = PipelineService(
+        llm_provider=llm_provider,
+        session_id="audio-then-text-test",
+        repository=repository,
+    )
+    service.speech_service.process = Mock(
+        return_value={
+            "transcript": "I feel very excited.",
+            "language": "en",
+            "language_probability": 0.99,
+            "audio": {"duration": 1.0, "speech_duration": 0.8},
+            "vad": {"speech_segments": [{"start": 0.1, "end": 0.9}]},
+            "features": {
+                "mean_pitch": 250,
+                "min_pitch": 120,
+                "max_pitch": 300,
+                "mean_energy": 0.14,
+            },
+        }
+    )
+
+    audio_result = service.process_audio("unused.wav")
+    text_result = service.process_text("And now a text-only follow-up.")
+
+    assert audio_result["human_state"]["emotion"]["label"] == "excited"
+    assert text_result["human_state"]["emotion"] == {
+        "label": "unknown",
+        "score": 0.0,
+    }
+    assert text_result["human_state"]["_temporal"] == {
+        "observation_valid": False,
+        "source": "text_only",
+    }
+    assert text_result["dialogue"]["dialogue_state"]["emotion"] == "unknown"
+    assert repository.add_turn.call_count == 2
+    persisted_text_state = repository.add_turn.call_args.kwargs["human_state"]
+    assert persisted_text_state["emotion"]["label"] == "unknown"
+    assert persisted_text_state["_temporal"]["observation_valid"] is False
+
+
+def test_consecutive_audio_turns_report_changing_emotions_immediately():
+    provider = Mock()
+    provider.generate.return_value = "Recorded response."
+    service = PipelineService(llm_provider=provider)
+    service.speech_service.process = Mock(
+        side_effect=[
+            {
+                "transcript": "I feel low.",
+                "audio": {"duration": 1.0, "speech_duration": 0.8},
+                "vad": {"speech_segments": [{"start": 0.1, "end": 0.9}]},
+                "features": {
+                    "mean_pitch": 150,
+                    "min_pitch": 130,
+                    "max_pitch": 165,
+                    "mean_energy": 0.02,
+                },
+            },
+            {
+                "transcript": "I feel energized.",
+                "audio": {"duration": 1.0, "speech_duration": 0.8},
+                "vad": {"speech_segments": [{"start": 0.1, "end": 0.9}]},
+                "features": {
+                    "mean_pitch": 250,
+                    "min_pitch": 120,
+                    "max_pitch": 300,
+                    "mean_energy": 0.14,
+                },
+            },
+        ]
+    )
+
+    first = service.process_audio("first.wav")
+    previous_baseline = service.human_state_engine.temporal_smoother._previous
+    second = service.process_audio("second.wav")
+
+    assert first["human_state"]["emotion"]["label"] == "sad"
+    assert second["human_state"]["emotion"]["label"] == "excited"
+    assert previous_baseline.emotion.label == "sad"
+    assert service.human_state_engine.temporal_smoother._previous.emotion.label == "excited"
+
+
+def test_invalid_audio_turn_does_not_change_smoother_baseline():
+    provider = Mock()
+    provider.generate.return_value = "Recorded response."
+    service = PipelineService(llm_provider=provider)
+    service.speech_service.process = Mock(
+        side_effect=[
+            {
+                "transcript": "A valid audio turn.",
+                "audio": {"duration": 1.0, "speech_duration": 0.8},
+                "vad": {"speech_segments": [{"start": 0.1, "end": 0.9}]},
+                "features": {
+                    "mean_pitch": 150,
+                    "min_pitch": 130,
+                    "max_pitch": 165,
+                    "mean_energy": 0.02,
+                },
+            },
+            {
+                "transcript": "A transcript with no detected speech.",
+                "audio": {"duration": 1.0, "speech_duration": 0.0},
+                "vad": {"speech_segments": []},
+                "features": {},
+            },
+            {
+                "transcript": "A different emotional audio turn.",
+                "audio": {"duration": 1.0, "speech_duration": 0.8},
+                "vad": {"speech_segments": [{"start": 0.1, "end": 0.9}]},
+                "features": {
+                    "mean_pitch": 250,
+                    "min_pitch": 120,
+                    "max_pitch": 300,
+                    "mean_energy": 0.14,
+                },
+            },
+        ]
+    )
+
+    first = service.process_audio("first.wav")
+    baseline = service.human_state_engine.temporal_smoother._previous
+    invalid = service.process_audio("invalid.wav")
+    assert invalid["human_state"]["emotion"]["label"] == "unknown"
+    assert invalid["human_state"]["_temporal"]["observation_valid"] is False
+    assert service.human_state_engine.temporal_smoother._previous is baseline
+
+    last = service.process_audio("last.wav")
+    assert first["human_state"]["emotion"]["label"] == "sad"
+    assert last["human_state"]["emotion"]["label"] == "excited"
+
+
+def test_audio_with_unusable_emotion_features_is_marked_unmeasured():
+    provider = Mock()
+    provider.generate.return_value = "Recorded response."
+    service = PipelineService(llm_provider=provider)
+    service.speech_service.process = Mock(return_value={
+        "transcript": "A clear transcript with no usable pitch estimate.",
+        "audio": {"duration": 1.0, "speech_duration": 0.8},
+        "vad": {"speech_segments": [{"start": 0.1, "end": 0.9}]},
+        "features": {
+            "mean_pitch": 0.0,
+            "min_pitch": 0.0,
+            "max_pitch": 0.0,
+            "mean_energy": 0.12,
+        },
+    })
+
+    result = service.process_audio("unmeasured.wav")
+
+    assert result["human_state"]["emotion"] == {"label": "unknown", "score": 0.0}
+    assert result["human_state"]["_temporal"]["observation_valid"] is False
+    assert result["human_state"]["_temporal"]["source"] == "audio"

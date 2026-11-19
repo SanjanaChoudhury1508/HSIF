@@ -16,7 +16,12 @@ test("History details mark invalid human-state observations as not measured", as
     historyPage,
     /turn\.human_state\?\._temporal\?\.observation_valid !== false/,
   );
-  assert.match(historyPage, /Not measured for this text-only interaction/);
+  assert.match(historyPage, /observationSource === "text_only"/);
+  assert.match(historyPage, /this interaction used text input/);
+  assert.match(historyPage, /observationSource === "audio"/);
+  assert.match(historyPage, /usable audio features were unavailable/);
+  assert.match(historyPage, /Emotion was not measured for this interaction/);
+  assert.doesNotMatch(historyPage, /Not measured for this text-only interaction/);
   assert.match(historyPage, /function Score\(\{ label, value, observationValid = true \}\)/);
   assert.match(historyPage, /valid \? `\$\{Math\.round\(score \* 100\)\}%` : "N\/A"/);
   assert.match(historyPage, /observationValid\s*\? formatLabel\(turn\.human_state\.emotion\.label\)\s*:\s*"Not measured"/);

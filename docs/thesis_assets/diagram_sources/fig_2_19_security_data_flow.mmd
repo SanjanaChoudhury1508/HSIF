@@ -1,0 +1,18 @@
+flowchart LR
+  %% Figure 2.19: Security and data-handling flow
+  upload["Audio upload: extension + size checks"]
+  temp["Temporary audio file"]
+  process["Process and clean up"]
+  db["PostgreSQL: text, HSR JSON, strategy"]
+  secret["Provider credentials from environment"]
+  browser["Browser-local prototype login"]
+  api["REST / WebSocket session ID"]
+  limitation["No server auth/ownership enforcement or rate limit"]
+  raw["Raw audio not stored in turn tables"]
+  upload -->|accepted file| temp
+  temp -->|temporary processing| process
+  process -->|successful turn only| db
+  process -->|temporary cleanup| raw
+  secret -->|provider configuration| process
+  browser -->|session ID supplied by client| api
+  api -->|no ownership check| limitation

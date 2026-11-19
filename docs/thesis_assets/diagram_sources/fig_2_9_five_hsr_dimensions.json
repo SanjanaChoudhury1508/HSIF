@@ -1,0 +1,172 @@
+{
+  "id": "fig_2_9_five_hsr_dimensions",
+  "number": "2.9",
+  "category": "human_state",
+  "title": "Five human-state dimensions and input features",
+  "caption": "Figure 2.9. Implemented feature families used by the five HSR estimators.",
+  "explanation": "The five values are derived from overlapping speech timing and acoustic features. Emotion uses pitch and energy heuristics; the remaining dimensions combine pause statistics, speech activity/duration, pitch range, and energy. They should be reported as heuristic proxies, not calibrated scores.",
+  "nodes": [
+    {
+      "id": "pitch",
+      "label": "Pitch: mean, min, max, range"
+    },
+    {
+      "id": "energy",
+      "label": "Mean RMS energy"
+    },
+    {
+      "id": "pauses",
+      "label": "Pause count, mean/max duration, silence"
+    },
+    {
+      "id": "activity",
+      "label": "Speech and silence duration"
+    },
+    {
+      "id": "emotion",
+      "label": "Emotion: pitch + energy"
+    },
+    {
+      "id": "hes",
+      "label": "Hesitation: pause metrics"
+    },
+    {
+      "id": "conf",
+      "label": "Confidence: pauses + duration + pitch + energy"
+    },
+    {
+      "id": "eng",
+      "label": "Engagement: activity + energy + pauses + pitch"
+    },
+    {
+      "id": "load",
+      "label": "Cognitive load: pauses + activity + pitch ratio + energy"
+    },
+    {
+      "id": "range",
+      "label": "Each score is bounded; heuristics, not calibrated probabilities"
+    }
+  ],
+  "edges": [
+    {
+      "from": "pitch",
+      "to": "emotion",
+      "label": "input"
+    },
+    {
+      "from": "energy",
+      "to": "emotion",
+      "label": "input"
+    },
+    {
+      "from": "pauses",
+      "to": "hes",
+      "label": "input"
+    },
+    {
+      "from": "pauses",
+      "to": "conf",
+      "label": "input"
+    },
+    {
+      "from": "activity",
+      "to": "conf",
+      "label": "duration"
+    },
+    {
+      "from": "pitch",
+      "to": "conf",
+      "label": "input"
+    },
+    {
+      "from": "energy",
+      "to": "conf",
+      "label": "input"
+    },
+    {
+      "from": "activity",
+      "to": "eng",
+      "label": "input"
+    },
+    {
+      "from": "energy",
+      "to": "eng",
+      "label": "input"
+    },
+    {
+      "from": "pauses",
+      "to": "eng",
+      "label": "input"
+    },
+    {
+      "from": "pitch",
+      "to": "eng",
+      "label": "input"
+    },
+    {
+      "from": "pauses",
+      "to": "load",
+      "label": "input"
+    },
+    {
+      "from": "activity",
+      "to": "load",
+      "label": "input"
+    },
+    {
+      "from": "pitch",
+      "to": "load",
+      "label": "ratio"
+    },
+    {
+      "from": "energy",
+      "to": "load",
+      "label": "input"
+    },
+    {
+      "from": "emotion",
+      "to": "range",
+      "label": "estimate"
+    },
+    {
+      "from": "hes",
+      "to": "range",
+      "label": "estimate"
+    },
+    {
+      "from": "conf",
+      "to": "range",
+      "label": "estimate"
+    },
+    {
+      "from": "eng",
+      "to": "range",
+      "label": "estimate"
+    },
+    {
+      "from": "load",
+      "to": "range",
+      "label": "estimate"
+    }
+  ],
+  "references": [
+    "ai/speech/feature_extraction/acoustic_features.py",
+    "ai/human_state/emotion/detector.py",
+    "ai/human_state/hesitation/detector.py",
+    "ai/human_state/confidence/estimator.py",
+    "ai/human_state/engagement/estimator.py",
+    "ai/human_state/cognitive_load/estimator.py"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 664,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

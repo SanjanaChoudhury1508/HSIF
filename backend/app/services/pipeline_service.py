@@ -49,7 +49,10 @@ class PipelineService:
         speech_result = {**speech_result, "transcript": transcript}
 
         observation_timestamp=time.time()
-        observation_valid=self._is_valid_observation(speech_result)
+        observation_valid=(
+            self._is_valid_observation(speech_result)
+            and self._has_valid_emotion_features(speech_result)
+        )
         human_state = self.human_state_engine.process_to_dict(
             speech_result,
             timestamp=observation_timestamp,
@@ -112,35 +115,20 @@ class PipelineService:
 
         user_message = user_message.strip()
 
-        # Reuse the latest observed human state when available.
-        current_state = self.human_state_engine.get_current_state()
-
-        if current_state is not None:
-            human_state = current_state.to_dict()
-            persisted_human_state = self._build_persisted_human_state(
-                human_state,
-                current_state,
-            )
-            human_state = persisted_human_state
-        else:
-            # No audio observation exists yet.
-            # These are neutral fallback values, NOT measured human-state scores.
-            human_state = {
-                "emotion": {"label": "unknown", "score": 0.0},
-                "hesitation": {"score": 0.0},
-                "confidence": {"score": 0.0},
-                "engagement": {"score": 0.0},
-                "cognitive_load": {"score": 0.0},
-            }
-
-            human_state = {
-                **human_state,
-                "_temporal": {
-                    "observation_valid": False,
-                    "source": "text_only",
-                },
-            }
-            persisted_human_state = dict(human_state)
+        # A text turn has no current acoustic observation. Do not carry a
+        # previous audio turn's measured state forward as if it were fresh.
+        human_state = {
+            "emotion": {"label": "unknown", "score": 0.0},
+            "hesitation": {"score": 0.0},
+            "confidence": {"score": 0.0},
+            "engagement": {"score": 0.0},
+            "cognitive_load": {"score": 0.0},
+            "_temporal": {
+                "observation_valid": False,
+                "source": "text_only",
+            },
+        }
+        persisted_human_state = dict(human_state)
 
         dialogue_result = self.dialogue_service.process(
             user_message,
@@ -188,6 +176,7 @@ class PipelineService:
             snapshot["_temporal"] = {
                 "timestamp": state.timestamp,
                 "observation_valid": state.observation_valid,
+                "source": "audio",
             }
 
         return snapshot
@@ -259,4 +248,32 @@ class PipelineService:
             and speech_duration > 0.0
             and isinstance(segments, (list, tuple))
             and bool(segments)
+        )
+
+    @staticmethod
+    def _has_valid_emotion_features(speech_result: dict) -> bool:
+        """Whether the acoustic values required by EmotionDetector exist."""
+        features = speech_result.get("features")
+        if not isinstance(features, dict):
+            return False
+
+        try:
+            mean_pitch = float(features["mean_pitch"])
+            min_pitch = float(features["min_pitch"])
+            max_pitch = float(features["max_pitch"])
+            mean_energy = float(features["mean_energy"])
+        except (KeyError, TypeError, ValueError, OverflowError):
+            return False
+
+        return (
+            all(math.isfinite(value) for value in (
+                mean_pitch,
+                min_pitch,
+                max_pitch,
+                mean_energy,
+            ))
+            and mean_pitch > 0.0
+            and min_pitch > 0.0
+            and max_pitch >= min_pitch
+            and mean_energy > 0.0
         )

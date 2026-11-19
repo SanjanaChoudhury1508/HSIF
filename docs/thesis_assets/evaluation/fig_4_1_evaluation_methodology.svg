@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1284" height="396" viewBox="0 0 1284 396">
+<title>Evaluation methodology and evidence tracks</title>
+<desc>Figure 4.1. Separate software, dataset, synthetic, and exploratory evaluation tracks.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/></marker></defs>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="642.0" y="48" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#18324b">Evaluation methodology and evidence tracks</text>
+<path d="M 420.0 176.0 L 864.0 250.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 780.0 192.0 L 906.0 234.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 1044.0 192.0 L 1044.0 234.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 420.0 280.0 L 864.0 280.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 822.0 280.0 L 864.0 280.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="60" y="100" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="124.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">CREMA-D emotion</text>
+<text x="240.0" y="147.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">7,442 recordings</text>
+<text x="240.0" y="170.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Evaluation, not training</text>
+<rect x="462" y="100" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="135.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Speech benchmark</text>
+<text x="642.0" y="158.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">1 audio/reference fixture</text>
+<rect x="864" y="100" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="1044.0" y="135.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">HSR benchmark</text>
+<text x="1044.0" y="158.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">4 synthetic profiles × 5</text>
+<rect x="60" y="234" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="269.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Dialogue policy</text>
+<text x="240.0" y="292.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">5 scenarios × 30 per mode</text>
+<rect x="462" y="234" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="269.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Gemini response comparison</text>
+<text x="642.0" y="292.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">5 scenarios, 10 historical calls</text>
+<rect x="864" y="234" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="1044.0" y="269.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Different evidence types; no</text>
+<text x="1044.0" y="292.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">single aggregate score</text>
+</svg>

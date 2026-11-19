@@ -1,0 +1,5 @@
+flowchart LR
+  %% Figure 2.15: PostgreSQL entity–relationship model
+  session["sessions<br/>PK id VARCHAR(100)<br/>created_at TIMESTAMP NOT NULL<br/>updated_at TIMESTAMP NOT NULL"]
+  turn["conversation_turns<br/>PK id INTEGER<br/>session_id VARCHAR(100) FK NOT NULL<br/>user_message TEXT NOT NULL<br/>assistant_message TEXT NOT NULL<br/>human_state JSONB NOT NULL<br/>dialogue_strategy VARCHAR(100) NOT NULL<br/>created_at TIMESTAMP NOT NULL"]
+  session -->|1 to many; FK ON DELETE CASCADE| turn

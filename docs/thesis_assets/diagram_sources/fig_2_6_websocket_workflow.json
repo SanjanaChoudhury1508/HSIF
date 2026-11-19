@@ -1,0 +1,130 @@
+{
+  "id": "fig_2_6_websocket_workflow",
+  "number": "2.6",
+  "category": "workflows",
+  "title": "Live microphone WebSocket workflow",
+  "caption": "Figure 2.6. Implemented buffered live-audio protocol; final turn processing remains full-recording.",
+  "explanation": "The client opens a session, sends PCM chunks, and signals end_turn. The server emits chunk metadata and may transcribe the accumulated interim buffer after a one-second minimum and three-second interval. At end_turn it processes the complete turn and emits transcript, state, strategy, and response events. The diagram does not imply incremental HSR or continuous partial generation.",
+  "nodes": [
+    {
+      "id": "connect",
+      "label": "Connect /ws/session/{session_id}"
+    },
+    {
+      "id": "start",
+      "label": "start_session → session_ready"
+    },
+    {
+      "id": "chunks",
+      "label": "Binary 16 kHz mono PCM chunks"
+    },
+    {
+      "id": "chunk_event",
+      "label": "speech_chunk: chunk timing/activity metadata"
+    },
+    {
+      "id": "buffer",
+      "label": "Turn buffer (10 MiB limit)"
+    },
+    {
+      "id": "interim",
+      "label": "transcript_partial: periodic transcript"
+    },
+    {
+      "id": "end",
+      "label": "end_turn"
+    },
+    {
+      "id": "final",
+      "label": "Full-recording pipeline in thread pool"
+    },
+    {
+      "id": "events",
+      "label": "transcript_final, human_state_update, dialogue_strategy, assistant_response"
+    },
+    {
+      "id": "error",
+      "label": "error event: recoverable flag / code / message"
+    },
+    {
+      "id": "close",
+      "label": "end_session or disconnect"
+    }
+  ],
+  "edges": [
+    {
+      "from": "connect",
+      "to": "start",
+      "label": "UUID accepted"
+    },
+    {
+      "from": "start",
+      "to": "chunks",
+      "label": "session active"
+    },
+    {
+      "from": "chunks",
+      "to": "chunk_event",
+      "label": "each valid PCM chunk"
+    },
+    {
+      "from": "chunk_event",
+      "to": "buffer",
+      "label": "append audio"
+    },
+    {
+      "from": "buffer",
+      "to": "interim",
+      "label": "periodic when threshold met"
+    },
+    {
+      "from": "buffer",
+      "to": "end",
+      "label": "client ends turn"
+    },
+    {
+      "from": "end",
+      "to": "final",
+      "label": "full buffer"
+    },
+    {
+      "from": "final",
+      "to": "events",
+      "label": "success"
+    },
+    {
+      "from": "final",
+      "to": "error",
+      "label": "processing failure"
+    },
+    {
+      "from": "events",
+      "to": "chunks",
+      "label": "next turn possible"
+    },
+    {
+      "from": "error",
+      "to": "chunks",
+      "label": "if recoverable"
+    }
+  ],
+  "references": [
+    "frontend/src/hooks/useStreamingSession.js",
+    "frontend/src/components/LiveMicrophone.jsx",
+    "backend/app/api/streaming.py:stream_session",
+    "ai/speech/streaming/chunk_processor.py",
+    "backend/app/services/pipeline_service.py:process_audio"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 664,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

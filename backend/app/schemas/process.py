@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class AudioResponse(BaseModel):
@@ -51,12 +51,23 @@ class ScoreResponse(BaseModel):
     score: float
 
 
+class HumanStateTemporalResponse(BaseModel):
+    timestamp: float | None = None
+    observation_valid: bool
+    source: str | None = None
+
+
 class HumanStateResponse(BaseModel):
     emotion: EmotionResponse
     hesitation: ScoreResponse
     confidence: ScoreResponse
     engagement: ScoreResponse
     cognitive_load: ScoreResponse
+    # Additive metadata: the five existing HSR dimensions remain unchanged.
+    temporal: HumanStateTemporalResponse | None = Field(
+        default=None,
+        alias="_temporal",
+    )
 
 
 class DialogueStateResponse(BaseModel):

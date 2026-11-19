@@ -1,0 +1,90 @@
+{
+  "id": "fig_2_18_deployment_architecture",
+  "number": "2.18",
+  "category": "deployment_security",
+  "title": "Local development deployment architecture",
+  "caption": "Figure 2.18. Verified local development components; not a production cloud deployment.",
+  "explanation": "The repository configures a Vite frontend, local FastAPI backend, PostgreSQL 18 Compose service on host port 5434, and external LLM APIs selected through environment configuration. The Vite development port defaults to 5173 but may vary. The actual running container, server versions, credentials, and readiness were not verified.",
+  "nodes": [
+    {
+      "id": "browser",
+      "label": "Browser / React client"
+    },
+    {
+      "id": "vite",
+      "label": "Vite dev server (default 5173)"
+    },
+    {
+      "id": "fastapi",
+      "label": "FastAPI / Uvicorn (configured 127.0.0.1:8000)"
+    },
+    {
+      "id": "pg",
+      "label": "Docker Compose PostgreSQL 18\nhost 5434 → container 5432"
+    },
+    {
+      "id": "env",
+      "label": "Private environment configuration\n(names documented; values not shown)"
+    },
+    {
+      "id": "llm",
+      "label": "External Groq or Gemini API\nselected provider only"
+    },
+    {
+      "id": "volume",
+      "label": "Named PostgreSQL volume\nhsif_postgres_data"
+    }
+  ],
+  "edges": [
+    {
+      "from": "browser",
+      "to": "vite",
+      "label": "HTTP"
+    },
+    {
+      "from": "vite",
+      "to": "fastapi",
+      "label": "REST / WS"
+    },
+    {
+      "from": "fastapi",
+      "to": "pg",
+      "label": "SQLAlchemy"
+    },
+    {
+      "from": "env",
+      "to": "fastapi",
+      "label": "settings/credentials"
+    },
+    {
+      "from": "fastapi",
+      "to": "llm",
+      "label": "provider API request"
+    },
+    {
+      "from": "pg",
+      "to": "volume",
+      "label": "persistent volume"
+    }
+  ],
+  "references": [
+    "frontend/vite.config.js",
+    "backend/app/main.py",
+    "docker-compose.yml",
+    "database/database.py",
+    "backend/app/services/llm/llm_service.py",
+    ".env.example (variable names only)"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 530,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

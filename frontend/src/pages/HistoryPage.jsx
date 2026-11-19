@@ -311,6 +311,14 @@ export default function HistoryPage() {
                   {selectedSession.turns.map((turn) => {
                     const observationValid =
                       turn.human_state?._temporal?.observation_valid !== false;
+                    const observationSource =
+                      turn.human_state?._temporal?.source;
+                    const unmeasuredEmotionText =
+                      observationSource === "text_only"
+                        ? "Emotion was not measured because this interaction used text input."
+                        : observationSource === "audio"
+                          ? "Emotion was not measured because usable audio features were unavailable."
+                          : "Emotion was not measured for this interaction.";
                     return (
                     <article className="history-turn" key={turn.id}>
                       <div className="history-message user">
@@ -339,7 +347,7 @@ export default function HistoryPage() {
                           <strong>Human state analysis</strong>
                           {!observationValid && (
                             <p className="history-emotion">
-                              Not measured for this text-only interaction.
+                              {unmeasuredEmotionText}
                             </p>
                           )}
 

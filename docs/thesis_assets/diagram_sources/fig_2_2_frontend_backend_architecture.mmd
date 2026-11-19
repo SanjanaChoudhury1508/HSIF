@@ -1,0 +1,23 @@
+flowchart LR
+  %% Figure 2.2: Frontend–backend architecture
+  ui["Chat, Dashboard, History UI"]
+  text["Text input"]
+  upload["Audio file input"]
+  mic["Microphone capture"]
+  rest["REST API"]
+  ws["WebSocket session"]
+  backend["FastAPI + PipelineService"]
+  out["Transcript, state, strategy, response"]
+  history["Session history from API"]
+  ui -->|submit| text
+  ui -->|select file| upload
+  ui -->|start/capture| mic
+  text -->|POST /message| rest
+  upload -->|POST /process| rest
+  mic -->|PCM chunks/end_turn| ws
+  rest -->|request| backend
+  ws -->|session events| backend
+  backend -->|processed turn| out
+  out -->|render| ui
+  rest -->|GET list/detail| history
+  history -->|history view| ui

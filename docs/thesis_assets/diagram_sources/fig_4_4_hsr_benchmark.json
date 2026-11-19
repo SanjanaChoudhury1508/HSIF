@@ -1,0 +1,43 @@
+{
+  "id": "fig_4_4_hsr_benchmark",
+  "number": "4.4",
+  "category": "evaluation",
+  "title": "Synthetic human-state behavior checks",
+  "caption": "Figure 4.4. Twenty synthetic HSR benchmark runs across four constructed profiles.",
+  "explanation": "The benchmark repeats four synthetic profiles five times each. It checks expected heuristic directionality, bounded output, and determinism. It does not compare predictions against labeled human observations and therefore is not an emotion or HSR accuracy evaluation.",
+  "nodes": [],
+  "edges": [],
+  "references": [
+    "evaluation/benchmark_human_state.py",
+    "evaluation/results/human_state_20261030T162245Z_2e5fd208.json"
+  ],
+  "kind": "chart",
+  "metrics": [
+    {
+      "label": "Synthetic profiles",
+      "value": 4,
+      "unit": "profiles"
+    },
+    {
+      "label": "Repeats per profile",
+      "value": 5,
+      "unit": "runs"
+    },
+    {
+      "label": "Total cases",
+      "value": 20,
+      "unit": "runs"
+    }
+  ],
+  "canvas": {
+    "width": 1500,
+    "height": 355,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

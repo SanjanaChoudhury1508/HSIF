@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="530" viewBox="0 0 1500 530">
+<title>Speech benchmark: one-fixture results</title>
+<desc>Figure 4.3. Faster-Whisper measurements for one audio/reference fixture only.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/></marker></defs>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="750.0" y="48" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#18324b">Speech benchmark: one-fixture results</text>
+<rect x="60" y="135" width="390" height="105" rx="12" fill="#eaf1f6" stroke="#8da2b5"/>
+<text x="255.0" y="175" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Mean latency</text>
+<text x="255.0" y="211" text-anchor="middle" font-family="Arial,sans-serif" font-size="23" font-weight="700" fill="#18324b">1.839 s</text>
+<rect x="492" y="135" width="390" height="105" rx="12" fill="#eaf1f6" stroke="#8da2b5"/>
+<text x="687.0" y="175" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Median latency</text>
+<text x="687.0" y="211" text-anchor="middle" font-family="Arial,sans-serif" font-size="23" font-weight="700" fill="#18324b">1.841 s</text>
+<rect x="924" y="135" width="390" height="105" rx="12" fill="#eaf1f6" stroke="#8da2b5"/>
+<text x="1119.0" y="175" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">P95 latency</text>
+<text x="1119.0" y="211" text-anchor="middle" font-family="Arial,sans-serif" font-size="23" font-weight="700" fill="#18324b">2.209 s</text>
+<rect x="60" y="278" width="390" height="105" rx="12" fill="#eaf1f6" stroke="#8da2b5"/>
+<text x="255.0" y="318" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">WER</text>
+<text x="255.0" y="354" text-anchor="middle" font-family="Arial,sans-serif" font-size="23" font-weight="700" fill="#18324b">0.125 ratio</text>
+<rect x="492" y="278" width="390" height="105" rx="12" fill="#eaf1f6" stroke="#8da2b5"/>
+<text x="687.0" y="318" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">CER</text>
+<text x="687.0" y="354" text-anchor="middle" font-family="Arial,sans-serif" font-size="23" font-weight="700" fill="#18324b">0.0392 ratio</text>
+</svg>

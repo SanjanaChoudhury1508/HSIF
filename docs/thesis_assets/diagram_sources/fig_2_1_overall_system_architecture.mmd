@@ -1,0 +1,31 @@
+flowchart LR
+  %% Figure 2.1: Overall HSIF system architecture
+  frontend["React / Vite frontend"]
+  rest["REST: audio upload and text"]
+  ws["WebSocket: live microphone"]
+  api["FastAPI routes"]
+  pipe["PipelineService orchestration"]
+  speech["SpeechService: conversion, VAD, Whisper"]
+  hsr["HumanStateEngine: five heuristic dimensions"]
+  state["Validity, smoothing, StateTracker"]
+  dialogue["StateFusion and DialoguePolicy"]
+  prompt["ConversationMemory and PromptBuilder"]
+  llm["LLMService provider adapter"]
+  groq["External Groq API (default)"]
+  gemini["External Gemini API (optional)"]
+  db["PostgreSQL: sessions, conversation_turns"]
+  frontend -->|request| rest
+  frontend -->|audio chunks| ws
+  rest -->|HTTP| api
+  ws -->|events| api
+  api -->|dispatch| pipe
+  pipe -->|audio only| speech
+  speech -->|transcript and features| hsr
+  hsr -->|observation| state
+  state -->|current valid state| dialogue
+  dialogue -->|strategy and context| prompt
+  prompt -->|prompt| llm
+  llm -->|selected provider| groq
+  llm -->|selected provider| gemini
+  pipe -->|successful turn| db
+  api -->|response/events| frontend

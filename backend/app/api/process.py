@@ -4,9 +4,19 @@ import logging
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from fastapi.concurrency import run_in_threadpool
+from google.genai import errors as gemini_errors
 
 from backend.app.services.pipeline_service import PipelineService
 from backend.app.services.llm.gemini_provider import GeminiQuotaExceededError
+from backend.app.services.llm.errors import (
+    LLMAuthenticationError,
+    LLMConfigurationError,
+    LLMIncompleteResponseError,
+    LLMProviderError,
+    LLMRateLimitError,
+    LLMTimeoutError,
+    LLMUnavailableError,
+)
 from backend.app.schemas.process import (
     ProcessResponse,
     HumanStateTrajectoryResponse,
@@ -36,6 +46,55 @@ ALLOWED_AUDIO_EXTENSIONS = {
 MAX_FILE_SIZE = 25 * 1024 * 1024
 
 
+def _provider_http_exception(error: LLMProviderError) -> HTTPException:
+    if isinstance(error, LLMIncompleteResponseError):
+        return HTTPException(
+            status_code=502,
+            detail="The AI response was cut off before it finished. Please try again.",
+        )
+    if isinstance(error, LLMRateLimitError):
+        return HTTPException(
+            status_code=429,
+            detail="The AI request quota or rate limit has been reached. Please try again later.",
+        )
+    if isinstance(error, LLMTimeoutError):
+        return HTTPException(
+            status_code=504,
+            detail="The AI provider timed out. Please try again.",
+        )
+    if isinstance(error, (LLMAuthenticationError, LLMConfigurationError)):
+        return HTTPException(
+            status_code=503,
+            detail="The AI provider is not configured correctly. Please contact support.",
+        )
+    if isinstance(error, LLMUnavailableError):
+        return HTTPException(
+            status_code=502,
+            detail="The AI provider is temporarily unavailable. Please try again.",
+        )
+    return HTTPException(
+        status_code=502,
+        detail="The AI provider could not process this request. Please try again.",
+    )
+
+
+def _gemini_http_exception(error) -> HTTPException:
+    if isinstance(error, gemini_errors.ServerError) and error.code == 504:
+        return HTTPException(
+            status_code=504,
+            detail="The AI provider timed out. Please try again.",
+        )
+    if isinstance(error, gemini_errors.ClientError) and error.code in {401, 403}:
+        return HTTPException(
+            status_code=503,
+            detail="The AI provider is not configured correctly. Please contact support.",
+        )
+    return HTTPException(
+        status_code=502,
+        detail="The AI provider is temporarily unavailable. Please try again.",
+    )
+
+
 def get_pipeline_service(
     session_id: str,
     llm_provider=None,
@@ -52,7 +111,8 @@ def get_pipeline_service(
 
 @router.post(
     "/process",
-    response_model=ProcessResponse
+    response_model=ProcessResponse,
+    response_model_exclude_none=True,
 )
 async def process_audio(
     audio: UploadFile = File(...),
@@ -133,6 +193,18 @@ async def process_audio(
             detail="Gemini quota is exhausted. Please try again later.",
         )
 
+    except LLMProviderError as exc:
+        logger.warning("Audio processing failed at the configured LLM provider")
+        raise _provider_http_exception(exc) from exc
+
+    except gemini_errors.ServerError as exc:
+        logger.warning("Audio processing failed at the Gemini provider")
+        raise _gemini_http_exception(exc) from exc
+
+    except gemini_errors.ClientError as exc:
+        logger.warning("Audio processing failed at the Gemini provider")
+        raise _gemini_http_exception(exc) from exc
+
     except TimeoutError:
         logger.warning("Audio processing timed out")
         raise HTTPException(
@@ -154,6 +226,7 @@ async def process_audio(
 @router.get(
     "/session/{session_id}/state",
     response_model=HumanStateTrajectoryResponse,
+    response_model_exclude_none=True,
 )
 async def get_session_state(session_id: str):
     pipeline_service = get_pipeline_service(session_id)
@@ -211,6 +284,25 @@ async def process_text_message(
                 "Please try again later."
             ),
         )
+
+    except LLMProviderError as exc:
+        logger.warning("Text processing failed at the configured LLM provider")
+        raise _provider_http_exception(exc) from exc
+
+    except TimeoutError as exc:
+        logger.warning("Text processing timed out")
+        raise HTTPException(
+            status_code=504,
+            detail="Text processing timed out. Please try again.",
+        ) from exc
+
+    except gemini_errors.ServerError as exc:
+        logger.warning("Text processing failed at the Gemini provider")
+        raise _gemini_http_exception(exc) from exc
+
+    except gemini_errors.ClientError as exc:
+        logger.warning("Text processing failed at the Gemini provider")
+        raise _gemini_http_exception(exc) from exc
 
     except Exception:
         logger.exception("Unexpected text processing failure")

@@ -1,0 +1,143 @@
+{
+  "id": "fig_2_8_hsr_architecture",
+  "number": "2.8",
+  "category": "human_state",
+  "title": "Human State Recognition architecture",
+  "caption": "Figure 2.8. Heuristic feature-to-state pipeline; outputs are estimates, not validated psychological measures.",
+  "explanation": "For audio turns, speech timing, VAD intervals, and acoustic features feed five separate heuristic dimensions. HumanStateEngine packages the outputs and validity metadata; smoothing/tracking operate on valid observations. Text-only turns do not enter this audio inference chain.",
+  "nodes": [
+    {
+      "id": "audio",
+      "label": "Audio and VAD timing"
+    },
+    {
+      "id": "features",
+      "label": "Pitch, energy, pauses, speech duration"
+    },
+    {
+      "id": "emotion",
+      "label": "Emotion heuristic"
+    },
+    {
+      "id": "hesitation",
+      "label": "Hesitation heuristic"
+    },
+    {
+      "id": "confidence",
+      "label": "Confidence heuristic"
+    },
+    {
+      "id": "engagement",
+      "label": "Engagement heuristic"
+    },
+    {
+      "id": "load",
+      "label": "Cognitive-load heuristic"
+    },
+    {
+      "id": "engine",
+      "label": "HumanStateEngine / HSR"
+    },
+    {
+      "id": "temporal",
+      "label": "Validity, smoothing, tracking"
+    },
+    {
+      "id": "consumer",
+      "label": "Dialogue and UI"
+    },
+    {
+      "id": "note",
+      "label": "Heuristic proxies; accuracy not established"
+    }
+  ],
+  "edges": [
+    {
+      "from": "audio",
+      "to": "features",
+      "label": "VAD speech segments"
+    },
+    {
+      "from": "features",
+      "to": "emotion",
+      "label": "acoustic values"
+    },
+    {
+      "from": "features",
+      "to": "hesitation",
+      "label": "pause timing"
+    },
+    {
+      "from": "features",
+      "to": "confidence",
+      "label": "pitch, energy, pauses"
+    },
+    {
+      "from": "features",
+      "to": "engagement",
+      "label": "activity, pitch, energy"
+    },
+    {
+      "from": "features",
+      "to": "load",
+      "label": "activity, pause, pitch, energy"
+    },
+    {
+      "from": "emotion",
+      "to": "engine",
+      "label": "label + score"
+    },
+    {
+      "from": "hesitation",
+      "to": "engine",
+      "label": "score"
+    },
+    {
+      "from": "confidence",
+      "to": "engine",
+      "label": "score"
+    },
+    {
+      "from": "engagement",
+      "to": "engine",
+      "label": "score"
+    },
+    {
+      "from": "load",
+      "to": "engine",
+      "label": "score"
+    },
+    {
+      "from": "engine",
+      "to": "temporal",
+      "label": "validity-aware state"
+    },
+    {
+      "from": "temporal",
+      "to": "consumer",
+      "label": "current observation"
+    }
+  ],
+  "references": [
+    "ai/speech/feature_extraction/acoustic_features.py",
+    "ai/human_state/emotion/detector.py",
+    "ai/human_state/hesitation/detector.py",
+    "ai/human_state/confidence/estimator.py",
+    "ai/human_state/engagement/estimator.py",
+    "ai/human_state/cognitive_load/estimator.py",
+    "ai/human_state/human_state_engine.py",
+    "ai/human_state/temporal_smoother.py"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 664,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

@@ -1,0 +1,29 @@
+flowchart LR
+  %% Figure 2.13: Dialogue strategy decision flow
+  start["Fused state"]
+  r1["1. emotion frustrated? → acknowledge_frustration"]
+  r2["2. hesitation ≥ .7 AND confidence ≤ .45? → reassure"]
+  r3["3. overloaded_uncertain AND confidence ≤ .35? → simplify"]
+  r4["4. interaction overloaded/overloaded_uncertain AND load ≥ .9? → reduce_information"]
+  r5["5. hesitation ≥ .7? → slow_down"]
+  r6["6. interaction overloaded? → simplify"]
+  r7["7. interaction struggling? → clarify"]
+  r8["8. interaction disengaged? → re_engage"]
+  r9["9. confident_engaged? → continue"]
+  r10["10. needs_clarification? uncertain → ask_follow_up; else clarify"]
+  r11["11. needs_encouragement? → encourage"]
+  r12["12. otherwise → normal_response"]
+  caveat["Precedence ordered; frustrated/uncertain labels are not emitted by current audio emotion detector"]
+  start -->|evaluate| r1
+  r1 -->|if no| r2
+  r2 -->|if no| r3
+  r3 -->|if no| r4
+  r4 -->|if no| r5
+  r5 -->|if no| r6
+  r6 -->|if no| r7
+  r7 -->|if no| r8
+  r8 -->|if no| r9
+  r9 -->|if no| r10
+  r10 -->|if no| r11
+  r11 -->|if no| r12
+  r12 -->|scope| caveat

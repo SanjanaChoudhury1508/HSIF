@@ -3,6 +3,8 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useStreamingSession } from "./hooks/useStreamingSession";
 import { withLoadingState } from "./services/audioUpload";
 import ChatFeedback from "./components/ChatFeedback";
+import AssistantMessage from "./components/AssistantMessage";
+import HumanStatePanel from "./components/HumanStatePanel";
 import "../ui-preview/styles.css";
 import "./App.css";
 
@@ -19,32 +21,6 @@ function Icon({ children }) {
     >
       {children}
     </svg>
-  );
-}
-
-function Metric({ label, value, color }) {
-  const raw = typeof value === "object" && value !== null
-    ? value.score
-    : value;
-
-  const number = raw == null ? null : Number(raw);
-  const percentage =
-    number == null ? 0 : Math.max(0, Math.min(100, number * 100));
-
-  
-  return (
-    <div className="meter">
-      <span className="name">{label}</span>
-      <span className="track">
-        <span
-          className={`fill ${color}`}
-          style={{ width: `${percentage}%` }}
-        />
-      </span>
-      <span className="val">
-        {number == null ? "–" : number.toFixed(2)}
-      </span>
-    </div>
   );
 }
 
@@ -96,9 +72,6 @@ export default function App() {
   const currentStrategy = strategy;
   const currentTranscript = transcript;
   const currentResponse = assistantResponse;
-
-  const emotion =
-    state?.emotion?.label || state?.emotion || "–";
 
   const strategyName =
     currentStrategy?.strategy ||
@@ -420,7 +393,7 @@ export default function App() {
                       {turn.assistant_message && (
                         <div className="msg">
                           <div className="bubble">
-                            <p>{turn.assistant_message}</p>
+                            <AssistantMessage content={turn.assistant_message} />
                             <small>HSIF Assistant</small>
                           </div>
                         </div>
@@ -440,7 +413,7 @@ export default function App() {
                   {currentResponse && (
                     <div className="msg">
                       <div className="bubble">
-                        <p>{currentResponse}</p>
+                        <AssistantMessage content={currentResponse} />
                         <small>HSIF Assistant</small>
                       </div>
                     </div>
@@ -575,21 +548,7 @@ export default function App() {
                     Scores appear here once the assistant has analysed a message.
                   </p>
           
-                  <div className="chips">
-                    <span
-                      className="chip"
-                      style={{ background: "#eceffa", color: "var(--ink)" }}
-                    >
-                      Emotion: {emotion}
-                    </span>
-                  </div>
-          
-                  <div className="meters">
-                    <Metric label="Confidence" value={state?.confidence} color="teal" />
-                    <Metric label="Hesitation" value={state?.hesitation} color="amber" />
-                    <Metric label="Engagement" value={state?.engagement} color="violet" />
-                    <Metric label="Cognitive load" value={state?.cognitive_load} color="coral" />
-                  </div>
+                  <HumanStatePanel state={state} />
           
                   <h3>Session details</h3>
           

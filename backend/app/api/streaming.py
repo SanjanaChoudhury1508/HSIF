@@ -11,6 +11,7 @@ from starlette.concurrency import run_in_threadpool
 
 from backend.app.api.process import get_pipeline_service
 from backend.app.services.llm.gemini_provider import GeminiQuotaExceededError
+from backend.app.services.llm.errors import LLMIncompleteResponseError
 from backend.app.services.pipeline_service import NoSpeechDetectedError
 from ai.speech.streaming.chunk_processor import StreamingAudioProcessor
 
@@ -495,7 +496,11 @@ async def stream_session(websocket: WebSocket, session_id: str):
                         ),
                     )
 
-                except (GeminiQuotaExceededError, NoSpeechDetectedError) as exc:
+                except (
+                    GeminiQuotaExceededError,
+                    LLMIncompleteResponseError,
+                    NoSpeechDetectedError,
+                ) as exc:
                     await send_event(
                         websocket,
                         "error",
@@ -504,6 +509,8 @@ async def stream_session(websocket: WebSocket, session_id: str):
                         code=(
                             "LLM_QUOTA_EXHAUSTED"
                             if isinstance(exc, GeminiQuotaExceededError)
+                            else "LLM_INCOMPLETE_RESPONSE"
+                            if isinstance(exc, LLMIncompleteResponseError)
                             else "NO_SPEECH_DETECTED"
                         ),
                         message=str(exc),

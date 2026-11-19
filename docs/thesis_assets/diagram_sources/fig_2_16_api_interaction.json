@@ -1,0 +1,135 @@
+{
+  "id": "fig_2_16_api_interaction",
+  "number": "2.16",
+  "category": "database_api",
+  "title": "API interaction overview",
+  "caption": "Figure 2.16. Implemented REST and WebSocket entry points and their response forms.",
+  "explanation": "Audio uses multipart REST and returns ProcessResponse. Text uses JSON REST and returns processed turn data. Live audio uses a WebSocket session with binary PCM and JSON events. Session list/detail and state trajectory are separate REST reads. The health endpoint is static and does not assert database readiness.",
+  "nodes": [
+    {
+      "id": "client",
+      "label": "React client",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "audio",
+      "label": "POST /api/v1/process\nmultipart audio + session_id",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "text",
+      "label": "POST /api/v1/message\nJSON message + session_id",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "ws",
+      "label": "/ws/session/{session_id}\nbinary PCM + control messages",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "history",
+      "label": "GET /api/v1/sessions\nGET /api/v1/sessions/{id}",
+      "row": 2,
+      "col": 0
+    },
+    {
+      "id": "state",
+      "label": "GET /api/v1/session/{id}/state",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "health",
+      "label": "GET /health\nstatic status",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "pipeline",
+      "label": "PipelineService",
+      "row": 3,
+      "col": 1
+    },
+    {
+      "id": "response",
+      "label": "ProcessResponse / errors / WS events",
+      "row": 4,
+      "col": 1
+    }
+  ],
+  "edges": [
+    {
+      "from": "client",
+      "to": "audio",
+      "label": "upload"
+    },
+    {
+      "from": "client",
+      "to": "text",
+      "label": "message"
+    },
+    {
+      "from": "client",
+      "to": "ws",
+      "label": "live audio"
+    },
+    {
+      "from": "client",
+      "to": "history",
+      "label": "list/detail"
+    },
+    {
+      "from": "client",
+      "to": "state",
+      "label": "trajectory"
+    },
+    {
+      "from": "client",
+      "to": "health",
+      "label": "health check"
+    },
+    {
+      "from": "audio",
+      "to": "pipeline",
+      "label": "process"
+    },
+    {
+      "from": "text",
+      "to": "pipeline",
+      "label": "process"
+    },
+    {
+      "from": "ws",
+      "to": "pipeline",
+      "label": "end_turn"
+    },
+    {
+      "from": "pipeline",
+      "to": "response",
+      "label": "JSON or events"
+    }
+  ],
+  "references": [
+    "backend/app/api/process.py",
+    "backend/app/api/streaming.py",
+    "backend/app/schemas/process.py",
+    "backend/app/main.py:health",
+    "frontend/src/services/"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 798,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

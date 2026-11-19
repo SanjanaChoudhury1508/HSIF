@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="548" viewBox="0 0 1500 548">
+<title>CREMA-D emotion evaluation results</title>
+<desc>Figure 4.2. CREMA-D evaluation metrics; data were evaluated, not used for training.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/></marker></defs>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="750.0" y="48" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#18324b">CREMA-D emotion evaluation results</text>
+<text x="330" y="160" text-anchor="end" font-family="Arial,sans-serif" font-size="17" fill="#20364b">Six-class accuracy</text>
+<rect x="350" y="130" width="427.87799999999993" height="40" rx="5" fill="#477a9e"/>
+<text x="787.8779999999999" y="157" font-family="Arial,sans-serif" font-size="16" fill="#20364b">21.61 %</text>
+<text x="330" y="252" text-anchor="end" font-family="Arial,sans-serif" font-size="17" fill="#20364b">Six-class macro-F1</text>
+<rect x="350" y="222" width="308.88" height="40" rx="5" fill="#477a9e"/>
+<text x="668.88" y="249" font-family="Arial,sans-serif" font-size="16" fill="#20364b">15.6 %</text>
+<text x="330" y="344" text-anchor="end" font-family="Arial,sans-serif" font-size="17" fill="#20364b">Happy/neutral/sad accuracy</text>
+<rect x="350" y="314" width="877.14" height="40" rx="5" fill="#477a9e"/>
+<text x="1237.1399999999999" y="341" font-family="Arial,sans-serif" font-size="16" fill="#20364b">44.3 %</text>
+<text x="330" y="436" text-anchor="end" font-family="Arial,sans-serif" font-size="17" fill="#20364b">Happy/neutral/sad macro-F1</text>
+<rect x="350" y="406" width="869.22" height="40" rx="5" fill="#477a9e"/>
+<text x="1229.22" y="433" font-family="Arial,sans-serif" font-size="16" fill="#20364b">43.9 %</text>
+<text x="350" y="518" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Evaluation only; reference classes exceed the detector output labels.</text>
+</svg>

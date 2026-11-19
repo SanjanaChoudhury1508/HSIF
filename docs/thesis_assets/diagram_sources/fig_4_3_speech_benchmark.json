@@ -1,0 +1,53 @@
+{
+  "id": "fig_4_3_speech_benchmark",
+  "number": "4.3",
+  "category": "evaluation",
+  "title": "Speech benchmark: one-fixture results",
+  "caption": "Figure 4.3. Faster-Whisper measurements for one audio/reference fixture only.",
+  "explanation": "Five warm runs on a single fixture produced mean latency 1.839 seconds, median 1.841 seconds, and P95 2.209 seconds. WER was .125 and CER .0392 for that fixture. The sample is too small to support a general transcription-quality or performance claim.",
+  "nodes": [],
+  "edges": [],
+  "references": [
+    "evaluation/benchmark_speech.py",
+    "evaluation/results/speech_20261030T052436Z_3e8ed483.json"
+  ],
+  "kind": "chart",
+  "metrics": [
+    {
+      "label": "Mean latency",
+      "value": 1.839,
+      "unit": "s"
+    },
+    {
+      "label": "Median latency",
+      "value": 1.841,
+      "unit": "s"
+    },
+    {
+      "label": "P95 latency",
+      "value": 2.209,
+      "unit": "s"
+    },
+    {
+      "label": "WER",
+      "value": 0.125,
+      "unit": "ratio"
+    },
+    {
+      "label": "CER",
+      "value": 0.0392,
+      "unit": "ratio"
+    }
+  ],
+  "canvas": {
+    "width": 1500,
+    "height": 530,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

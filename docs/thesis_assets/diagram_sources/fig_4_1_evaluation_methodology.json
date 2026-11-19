@@ -1,0 +1,81 @@
+{
+  "id": "fig_4_1_evaluation_methodology",
+  "number": "4.1",
+  "category": "evaluation",
+  "title": "Evaluation methodology and evidence tracks",
+  "caption": "Figure 4.1. Separate software, dataset, synthetic, and exploratory evaluation tracks.",
+  "explanation": "The repository contains five distinct evaluation tracks with different evidence strength: CREMA-D labeled audio evaluation; a one-fixture speech benchmark; synthetic HSR behavior checks; synthetic dialogue-policy checks; and a small historical Gemini response comparison. Their results should not be combined as a single accuracy or human-study claim.",
+  "nodes": [
+    {
+      "id": "crema",
+      "label": "CREMA-D emotion\n7,442 recordings\nEvaluation, not training"
+    },
+    {
+      "id": "speech",
+      "label": "Speech benchmark\n1 audio/reference fixture"
+    },
+    {
+      "id": "hsr",
+      "label": "HSR benchmark\n4 synthetic profiles × 5"
+    },
+    {
+      "id": "dialogue",
+      "label": "Dialogue policy\n5 scenarios × 30 per mode"
+    },
+    {
+      "id": "gemini",
+      "label": "Gemini response comparison\n5 scenarios, 10 historical calls"
+    },
+    {
+      "id": "scope",
+      "label": "Different evidence types; no single aggregate score"
+    }
+  ],
+  "edges": [
+    {
+      "from": "crema",
+      "to": "scope",
+      "label": "labeled dataset metrics"
+    },
+    {
+      "from": "speech",
+      "to": "scope",
+      "label": "one-fixture WER/CER/latency"
+    },
+    {
+      "from": "hsr",
+      "to": "scope",
+      "label": "directionality/bounds/determinism"
+    },
+    {
+      "from": "dialogue",
+      "to": "scope",
+      "label": "policy behavior only"
+    },
+    {
+      "from": "gemini",
+      "to": "scope",
+      "label": "exploratory paired ratings"
+    }
+  ],
+  "references": [
+    "evaluation/benchmark_cremad_emotion.py",
+    "evaluation/benchmark_speech.py",
+    "evaluation/benchmark_human_state.py",
+    "evaluation/benchmark_dialogue.py",
+    "evaluation/benchmark_gemini_responses.py",
+    "evaluation/results/"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 396,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

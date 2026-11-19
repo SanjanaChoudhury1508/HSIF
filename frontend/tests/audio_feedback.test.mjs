@@ -18,6 +18,8 @@ import { getWebSocketErrorTransition } from "../src/services/streamingErrors.js"
 const frontendRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 let vite;
 let ChatFeedback;
+let AssistantMessage;
+let HumanStatePanel;
 
 before(async () => {
   vite = await createServer({
@@ -30,6 +32,12 @@ before(async () => {
   });
   ({ default: ChatFeedback } = await vite.ssrLoadModule(
     "/src/components/ChatFeedback.jsx"
+  ));
+  ({ default: AssistantMessage } = await vite.ssrLoadModule(
+    "/src/components/AssistantMessage.jsx"
+  ));
+  ({ default: HumanStatePanel } = await vite.ssrLoadModule(
+    "/src/components/HumanStatePanel.jsx"
   ));
 });
 
@@ -240,8 +248,8 @@ test("non-recoverable WebSocket errors invoke microphone cleanup", async () => {
   );
 });
 
-test("chat visibly renders the safe Gemini quota detail from the message API", async () => {
-  const quotaMessage = "The AI request quota has been reached. Please try again later.";
+test("chat visibly renders the safe LLM quota detail from the message API", async () => {
+  const quotaMessage = "The AI request quota or rate limit has been reached. Please try again later.";
   const html = renderToStaticMarkup(React.createElement(ChatFeedback, {
     uploadError: "Upload failed clearly.",
     streamError: quotaMessage,
@@ -264,6 +272,136 @@ test("chat visibly renders the safe Gemini quota detail from the message API", a
     /if \(!response\.ok\)\s*\{\s*throw new Error\(\s*data\.detail \|\| "Message processing failed\."\s*\);/s,
   );
   assert.match(hook, /setError\(err\.message \|\| "Could not send message\."\)/);
+});
+
+test("assistant messages render Markdown safely with formatting and line breaks", async () => {
+  const markdown = [
+    "# Heading",
+    "",
+    "**Bold** and *italic* text.",
+    "",
+    "First line",
+    "Second line<br>Third line.",
+    "",
+    "- unordered one",
+    "- unordered two",
+    "",
+    "1. ordered one",
+    "2. ordered two",
+    "",
+    "Inline `code`.",
+    "",
+    "```js",
+    "const answer = 42;",
+    "```",
+    "",
+    "[A safe link](https://example.com)",
+    "",
+    "<script>alert('unsafe')</script>",
+  ].join("\n");
+  const html = renderToStaticMarkup(
+    React.createElement(AssistantMessage, { content: markdown }),
+  );
+
+  assert.match(html, /<h1>Heading<\/h1>/);
+  assert.match(html, /<strong>Bold<\/strong>/);
+  assert.match(html, /<em>italic<\/em>/);
+  assert.match(html, /<ul>[\s\S]*<li>unordered one<\/li>[\s\S]*<\/ul>/);
+  assert.match(html, /<ol>[\s\S]*<li>ordered one<\/li>[\s\S]*<\/ol>/);
+  assert.match(html, /First line<br\/>\s*Second line<br\/>\s*Third line\./);
+  assert.match(html, /<code>code<\/code>/);
+  assert.match(html, /<pre><code class="language-js">const answer = 42;/);
+  assert.match(html, /<a href="https:\/\/example\.com">A safe link<\/a>/);
+  assert.doesNotMatch(html, /<script\b/i);
+  assert.match(html, /&lt;script&gt;alert/);
+
+  const chatPage = await readFile(resolve(frontendRoot, "src/ChatPage.jsx"), "utf8");
+  assert.match(chatPage, /<p>\{turn\.user_message\}<\/p>/);
+  assert.match(chatPage, /<AssistantMessage content=\{turn\.assistant_message\} \/>/);
+});
+
+test("assistant renderer preserves the end of a long Markdown response", () => {
+  const finalSentence = "**The complete answer ends here.**";
+  const markdown = [
+    "# Detailed answer",
+    ...Array.from({ length: 120 }, (_, index) => `${index + 1}. A full explanation paragraph with useful detail.`),
+    finalSentence,
+  ].join("\n\n");
+  const html = renderToStaticMarkup(
+    React.createElement(AssistantMessage, { content: markdown }),
+  );
+
+  assert.ok(html.length > 5000);
+  assert.ok(html.includes("<strong>The complete answer ends here.</strong>"));
+});
+
+test("chat marks text-only measurements as not measured and suppresses meters", async () => {
+  const textTurn = {
+    emotion: { label: "unknown", score: 0 },
+    confidence: { score: 0 },
+    hesitation: { score: 0 },
+    engagement: { score: 0 },
+    cognitive_load: { score: 0 },
+    _temporal: { observation_valid: false, source: "text_only" },
+  };
+  const html = renderToStaticMarkup(
+    React.createElement(HumanStatePanel, { state: textTurn }),
+  );
+
+  assert.match(html, /Emotion: Not measured/);
+  assert.match(html, /measurements are unavailable/i);
+  assert.doesNotMatch(html, /class="meter"/);
+  assert.doesNotMatch(html, />0\.00</);
+
+  // The current turn replaces a prior audio observation after text input.
+  const turns = [
+    { _temporal: { observation_valid: true, source: "audio" }, emotion: { label: "neutral" } },
+    textTurn,
+  ];
+  const currentTurnHtml = renderToStaticMarkup(
+    React.createElement(HumanStatePanel, { state: turns.at(-1) }),
+  );
+  assert.match(currentTurnHtml, /Emotion: Not measured/);
+  assert.doesNotMatch(currentTurnHtml, /Emotion: neutral/);
+
+  const chatPage = await readFile(resolve(frontendRoot, "src/ChatPage.jsx"), "utf8");
+  const streamingHook = await readFile(
+    resolve(frontendRoot, "src/hooks/useStreamingSession.js"),
+    "utf8",
+  );
+  assert.match(chatPage, /<HumanStatePanel state=\{state\} \/>/);
+  assert.match(streamingHook, /setHumanState\(newTurn\.human_state\)/g);
+  assert.equal((streamingHook.match(/setHumanState\(newTurn\.human_state\)/g) || []).length, 2);
+});
+
+test("audio with invalid features is unmeasured, while valid neutral audio remains neutral", () => {
+  const invalidAudioHtml = renderToStaticMarkup(
+    React.createElement(HumanStatePanel, {
+      state: {
+        emotion: { label: "unknown", score: 0 },
+        confidence: { score: 0 },
+        _temporal: { observation_valid: false, source: "audio" },
+      },
+    }),
+  );
+  assert.match(invalidAudioHtml, /Emotion: Not measured/);
+  assert.doesNotMatch(invalidAudioHtml, /class="meter"/);
+
+  const neutralAudioHtml = renderToStaticMarkup(
+    React.createElement(HumanStatePanel, {
+      state: {
+        emotion: { label: "neutral", score: 0.7 },
+        confidence: { score: 0.6 },
+        hesitation: { score: 0.1 },
+        engagement: { score: 0.5 },
+        cognitive_load: { score: 0.2 },
+        _temporal: { observation_valid: true, source: "audio" },
+      },
+    }),
+  );
+  assert.match(neutralAudioHtml, /Emotion: neutral/);
+  assert.match(neutralAudioHtml, /class="meter"/);
+  assert.doesNotMatch(neutralAudioHtml, /Not measured/);
 });
 
 test("chat feedback CSS is visible and spans the controls on narrow layouts", async () => {

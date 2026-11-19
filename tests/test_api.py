@@ -1,4 +1,5 @@
 import pytest
+from google.genai import errors as gemini_errors
 from pathlib import Path
 from threading import get_ident
 from unittest.mock import Mock
@@ -9,11 +10,35 @@ from backend.app.main import app
 from backend.app.api.process import sessions, get_pipeline_service
 from backend.app.api import process as process_api
 from backend.app.services.pipeline_service import NoSpeechDetectedError
-from backend.app.services.llm.gemini_provider import GeminiQuotaExceededError
+from backend.app.services.llm.gemini_provider import (
+    GeminiIncompleteResponseError,
+    GeminiQuotaExceededError,
+)
+from backend.app.services.llm.errors import (
+    LLMAuthenticationError,
+    LLMConfigurationError,
+    LLMIncompleteResponseError,
+    LLMRateLimitError,
+    LLMTimeoutError,
+    LLMUnavailableError,
+)
 
 client = TestClient(app)
 
 AUDIO_FILE = Path("tests/audio/recording.m4a")
+
+
+@pytest.fixture(autouse=True)
+def isolate_api_test_repository(monkeypatch):
+    """Keep API tests from creating or changing local PostgreSQL records."""
+    test_repository = Mock()
+    test_repository.get_turns.return_value = []
+    test_repository.list_sessions.return_value = []
+    test_repository.get_session_history.return_value = None
+    sessions.clear()
+    monkeypatch.setattr(process_api, "repository", test_repository)
+    yield
+    sessions.clear()
 
 
 def create_test_provider():
@@ -178,6 +203,43 @@ def test_audio_endpoint_runs_pipeline_in_threadpool(monkeypatch):
     assert thread_ids["pipeline"] != thread_ids["route"]
 
 
+def test_audio_response_retains_invalid_emotion_observation_metadata(monkeypatch):
+    result = valid_process_response()
+    result["human_state"]["emotion"] = {"label": "unknown", "score": 0.0}
+    result["human_state"]["_temporal"] = {
+        "timestamp": 123.5,
+        "observation_valid": False,
+        "source": "audio",
+    }
+    pipeline = Mock()
+    pipeline.process_audio.return_value = result
+    monkeypatch.setattr(
+        process_api,
+        "get_pipeline_service",
+        lambda _session_id: pipeline,
+    )
+
+    response = client.post(
+        "/api/v1/process?session_id=invalid-emotion-test",
+        files={"audio": ("test.wav", b"audio-data", "audio/wav")},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["human_state"]["_temporal"] == {
+        "timestamp": 123.5,
+        "observation_valid": False,
+        "source": "audio",
+    }
+    assert set(response.json()["human_state"]) >= {
+        "emotion",
+        "hesitation",
+        "confidence",
+        "engagement",
+        "cognitive_load",
+        "_temporal",
+    }
+
+
 def test_empty_transcription_returns_clear_audio_error(monkeypatch):
     pipeline = Mock()
     pipeline.process_audio.side_effect = NoSpeechDetectedError(
@@ -228,6 +290,79 @@ def test_text_message_maps_gemini_quota_to_safe_http_429(monkeypatch):
     ("failure", "expected_status", "visible_message"),
     [
         (
+            LLMTimeoutError("private timeout details"),
+            504,
+            "The AI provider timed out. Please try again.",
+        ),
+        (
+            LLMAuthenticationError("private auth details"),
+            503,
+            "The AI provider is not configured correctly. Please contact support.",
+        ),
+        (
+            LLMConfigurationError("private config details"),
+            503,
+            "The AI provider is not configured correctly. Please contact support.",
+        ),
+        (
+            LLMRateLimitError("private quota details"),
+            429,
+            "The AI request quota or rate limit has been reached. Please try again later.",
+        ),
+        (
+            LLMUnavailableError("private upstream details"),
+            502,
+            "The AI provider is temporarily unavailable. Please try again.",
+        ),
+        (
+            LLMIncompleteResponseError("private truncation details"),
+            502,
+            "The AI response was cut off before it finished. Please try again.",
+        ),
+        (
+            GeminiIncompleteResponseError("private truncated response details"),
+            500,
+            "Text processing failed. Please try again.",
+        ),
+        (
+            gemini_errors.ServerError(
+                504,
+                {"error": {"message": "private deadline details"}},
+                None,
+            ),
+            504,
+            "The AI provider timed out. Please try again.",
+        ),
+    ],
+)
+def test_text_message_returns_safe_provider_failure_status(
+    monkeypatch,
+    failure,
+    expected_status,
+    visible_message,
+):
+    pipeline = Mock()
+    pipeline.process_text.side_effect = failure
+    monkeypatch.setattr(
+        process_api,
+        "get_pipeline_service",
+        lambda _session_id: pipeline,
+    )
+
+    response = client.post(
+        "/api/v1/message?session_id=provider-error-test",
+        json={"message": "Please explain this."},
+    )
+
+    assert response.status_code == expected_status
+    assert response.json()["detail"] == visible_message
+    assert str(failure) not in response.text
+
+
+@pytest.mark.parametrize(
+    ("failure", "expected_status", "visible_message"),
+    [
+        (
             GeminiQuotaExceededError("provider response includes private details"),
             429,
             "Gemini quota is exhausted. Please try again later.",
@@ -241,6 +376,16 @@ def test_text_message_maps_gemini_quota_to_safe_http_429(monkeypatch):
             RuntimeError("database unavailable"),
             500,
             "Audio processing failed. Please try again.",
+        ),
+        (
+            LLMTimeoutError("private provider timeout details"),
+            504,
+            "The AI provider timed out. Please try again.",
+        ),
+        (
+            LLMRateLimitError("private provider quota details"),
+            429,
+            "The AI request quota or rate limit has been reached. Please try again later.",
         ),
     ],
 )
