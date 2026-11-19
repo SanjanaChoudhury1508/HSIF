@@ -1,0 +1,21 @@
+flowchart LR
+  %% Figure 2.14: LLM provider integration
+  config["LLM_PROVIDER configuration"]
+  service["LLMService"]
+  groq["GroqProvider (default)"]
+  gemini["GeminiProvider (supported)"]
+  external_g["External Groq API"]
+  external_m["External Gemini API"]
+  success["Non-empty generated response"]
+  errors["Typed timeout / auth / rate / incomplete / unavailable errors"]
+  api["Safe API/WebSocket response"]
+  config -->|validate provider| service
+  service -->|if groq| groq
+  service -->|if gemini| gemini
+  groq -->|request| external_g
+  gemini -->|request| external_m
+  external_g -->|response| success
+  external_m -->|response| success
+  external_g -->|provider error| errors
+  external_m -->|provider error| errors
+  errors -->|mapped error; no fallback| api

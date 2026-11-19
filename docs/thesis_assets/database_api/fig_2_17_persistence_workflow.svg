@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1284" height="932" viewBox="0 0 1284 932">
+<title>Conversation persistence and retrieval</title>
+<desc>Figure 2.17. Successful turn persistence and session/history retrieval.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/></marker></defs>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="642.0" y="48" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#18324b">Conversation persistence and retrieval</text>
+<path d="M 642.0 192.0 L 642.0 234.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 642.0 326.0 L 642.0 368.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 504.0 460.0 L 378.0 502.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 240.0 594.0 L 240.0 636.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 780.0 460.0 L 906.0 502.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 240.0 728.0 L 240.0 770.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 607.5 326.0 L 274.5 770.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 378.0 728.0 L 504.0 770.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 975.0 326.0 L 309.0 770.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="462" y="100" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="146.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Session ID</text>
+<rect x="462" y="234" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="280.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">SessionRepository get/create</text>
+<rect x="462" y="368" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="403.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Process turn: speech/text, HSR,</text>
+<text x="642.0" y="426.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">dialogue, LLM</text>
+<rect x="60" y="502" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="548.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Generation succeeds</text>
+<rect x="60" y="636" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="682.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Insert conversation_turn</text>
+<rect x="864" y="502" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="1044.0" y="548.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Failure: no successful turn insert</text>
+<rect x="60" y="770" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="816.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">List/detail history API</text>
+<rect x="462" y="770" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="816.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">State trajectory API</text>
+<rect x="864" y="234" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="1044.0" y="269.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Browser localStorage prototype</text>
+<text x="1044.0" y="292.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">(separate)</text>
+</svg>

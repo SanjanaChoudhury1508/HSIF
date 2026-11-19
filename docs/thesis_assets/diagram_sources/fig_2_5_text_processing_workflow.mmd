@@ -1,0 +1,21 @@
+flowchart LR
+  %% Figure 2.5: Text-only processing workflow
+  input["Text message"]
+  validate["Pydantic request validation"]
+  state["HSR metadata: invalid / text_only"]
+  bypass["No audio features or HSE inference"]
+  fusion["StateFusion handles unmeasured input"]
+  policy["Rule-based dialogue policy"]
+  memory["Conversation memory + prompt"]
+  llm["Configured LLM provider"]
+  persist["Persist successful conversation turn"]
+  out["JSON response to client"]
+  input -->|POST /api/v1/message| validate
+  validate -->|valid message| state
+  state -->|observation_valid=false| bypass
+  bypass -->|text and conversation context| fusion
+  fusion -->|neutral internal defaults| policy
+  policy -->|selected strategy| memory
+  memory -->|prompt| llm
+  llm -->|success only| persist
+  persist -->|response| out

@@ -7,8 +7,8 @@ The HSR is the structured output of the Human State Engine.
 Scores are normalized to the inclusive range [0.0, 1.0].
 They represent model estimates, not objective psychological measurements.
 
-EmotionResult.score represents confidence in the predicted emotion label,
-not the intensity of that emotion.
+EmotionResult.score is a heuristic score for the predicted emotion label,
+not a calibrated probability or a measure of emotion intensity.
 """
 
 from dataclasses import dataclass, asdict, field

@@ -1,0 +1,106 @@
+{
+  "id": "fig_2_10_state_fusion_temporal_smoothing",
+  "number": "2.10",
+  "category": "human_state",
+  "title": "State fusion and temporal smoothing",
+  "caption": "Figure 2.10. Validity-aware temporal state handling and dialogue fusion.",
+  "explanation": "Valid HSR observations pass through numeric smoothing (alpha .4 by default) and state tracking (change threshold .1). Emotion confirmation count defaults to 1, so labels can change immediately. Invalid observations do not replace the valid smoothing baseline and are not counted as fresh state changes. StateFusion derives interaction conditions for dialogue policy.",
+  "nodes": [
+    {
+      "id": "obs",
+      "label": "Current HSR observation"
+    },
+    {
+      "id": "valid",
+      "label": "Validity check"
+    },
+    {
+      "id": "invalid",
+      "label": "Invalid: preserve previous smoother baseline; no fresh change"
+    },
+    {
+      "id": "smooth",
+      "label": "Numeric smoothing, alpha = 0.4"
+    },
+    {
+      "id": "label",
+      "label": "Emotion confirmation count = 1 by default"
+    },
+    {
+      "id": "tracker",
+      "label": "StateTracker, threshold = 0.1"
+    },
+    {
+      "id": "history",
+      "label": "State history / changes"
+    },
+    {
+      "id": "fusion",
+      "label": "StateFusion interaction flags"
+    },
+    {
+      "id": "policy",
+      "label": "DialoguePolicy input"
+    }
+  ],
+  "edges": [
+    {
+      "from": "obs",
+      "to": "valid",
+      "label": "check metadata"
+    },
+    {
+      "from": "valid",
+      "to": "invalid",
+      "label": "false"
+    },
+    {
+      "from": "valid",
+      "to": "smooth",
+      "label": "true"
+    },
+    {
+      "from": "smooth",
+      "to": "label",
+      "label": "smoothed scores"
+    },
+    {
+      "from": "label",
+      "to": "tracker",
+      "label": "current label"
+    },
+    {
+      "from": "tracker",
+      "to": "history",
+      "label": "thresholded changes"
+    },
+    {
+      "from": "history",
+      "to": "fusion",
+      "label": "state/context"
+    },
+    {
+      "from": "fusion",
+      "to": "policy",
+      "label": "fused state"
+    }
+  ],
+  "references": [
+    "ai/human_state/temporal_smoother.py",
+    "ai/human_state/state_tracker.py",
+    "ai/human_state/human_state_engine.py",
+    "ai/dialogue/fusion/state_fusion.py"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 530,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

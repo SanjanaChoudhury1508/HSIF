@@ -17,13 +17,26 @@ def make_speech_result(
     }
 
 
-def test_missing_features_return_neutral():
+def test_missing_features_return_unknown_without_a_fabricated_score():
     detector = EmotionDetector()
 
     result = detector.detect({"features": {}})
 
-    assert result["label"] == "neutral"
-    assert 0.0 <= result["score"] <= 1.0
+    assert result == {"label": "unknown", "score": 0.0}
+
+
+@pytest.mark.parametrize(
+    "features",
+    [
+        {"mean_energy": 0.1, "min_pitch": 100, "max_pitch": 200},
+        {"mean_pitch": 150, "min_pitch": 100, "max_pitch": 200},
+    ],
+)
+def test_missing_pitch_or_energy_is_unmeasured(features):
+    assert EmotionDetector().detect({"features": features}) == {
+        "label": "unknown",
+        "score": 0.0,
+    }
 
 
 def test_excited_speech():
@@ -101,8 +114,7 @@ def test_invalid_numeric_features_are_safe():
         )
     )
 
-    assert result["label"] == "neutral"
-    assert 0.0 <= result["score"] <= 1.0
+    assert result == {"label": "unknown", "score": 0.0}
 
 
 def test_emotion_score_is_bounded():
@@ -138,7 +150,8 @@ def test_malformed_input_does_not_crash(speech_result):
     except (AttributeError, TypeError):
         pytest.fail("EmotionDetector.detect crashed on malformed input")
 
-    assert result["label"] in {"neutral", "excited", "sad", "happy"}
+    assert result["label"] == "unknown"
+    assert result["score"] == 0.0
     assert 0.0 <= result["score"] <= 1.0
 
 def test_inconsistent_pitch_bounds_return_bounded_result():
@@ -153,7 +166,7 @@ def test_inconsistent_pitch_bounds_return_bounded_result():
         )
     )
 
-    assert result["label"] in {"neutral", "excited", "sad", "happy"}
+    assert result["label"] == "unknown"
     assert isinstance(result["score"], float)
     assert 0.0 <= result["score"] <= 1.0
 
@@ -170,6 +183,6 @@ def test_non_finite_features_return_bounded_result():
         )
     )
 
-    assert result["label"] in {"neutral", "excited", "sad", "happy"}
+    assert result["label"] == "unknown"
     assert isinstance(result["score"], float)
     assert 0.0 <= result["score"] <= 1.0

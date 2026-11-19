@@ -123,8 +123,7 @@ def test_emotion_detector_returns_a_supported_label_and_bounded_score():
 def test_emotion_detector_handles_missing_acoustic_features():
     result = EmotionDetector().detect({"features": {}})
 
-    assert result["label"] == "neutral"
-    assert 0.0 <= result["score"] <= 1.0
+    assert result == {"label": "unknown", "score": 0.0}
 
 
 def test_longer_pauses_increase_hesitation_score():
@@ -215,8 +214,8 @@ def test_emotion_detector_is_deterministic_for_distinct_acoustic_profiles():
 def test_emotion_detector_does_not_infer_neutral_from_missing_features():
     result = EmotionDetector().detect({"features": {}})
 
-    assert result["label"] == "neutral"
-    assert result["score"] == 0.5
+    assert result["label"] == "unknown"
+    assert result["score"] == 0.0
 
 
 @pytest.mark.parametrize(

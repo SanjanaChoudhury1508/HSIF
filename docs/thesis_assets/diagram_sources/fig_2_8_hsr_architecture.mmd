@@ -1,0 +1,26 @@
+flowchart LR
+  %% Figure 2.8: Human State Recognition architecture
+  audio["Audio and VAD timing"]
+  features["Pitch, energy, pauses, speech duration"]
+  emotion["Emotion heuristic"]
+  hesitation["Hesitation heuristic"]
+  confidence["Confidence heuristic"]
+  engagement["Engagement heuristic"]
+  load["Cognitive-load heuristic"]
+  engine["HumanStateEngine / HSR"]
+  temporal["Validity, smoothing, tracking"]
+  consumer["Dialogue and UI"]
+  note["Heuristic proxies; accuracy not established"]
+  audio -->|VAD speech segments| features
+  features -->|acoustic values| emotion
+  features -->|pause timing| hesitation
+  features -->|pitch, energy, pauses| confidence
+  features -->|activity, pitch, energy| engagement
+  features -->|activity, pause, pitch, energy| load
+  emotion -->|label + score| engine
+  hesitation -->|score| engine
+  confidence -->|score| engine
+  engagement -->|score| engine
+  load -->|score| engine
+  engine -->|validity-aware state| temporal
+  temporal -->|current observation| consumer

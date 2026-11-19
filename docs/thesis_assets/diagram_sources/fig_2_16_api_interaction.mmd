@@ -1,0 +1,21 @@
+flowchart LR
+  %% Figure 2.16: API interaction overview
+  client["React client"]
+  audio["POST /api/v1/process<br/>multipart audio + session_id"]
+  text["POST /api/v1/message<br/>JSON message + session_id"]
+  ws["/ws/session/{session_id}<br/>binary PCM + control messages"]
+  history["GET /api/v1/sessions<br/>GET /api/v1/sessions/{id}"]
+  state["GET /api/v1/session/{id}/state"]
+  health["GET /health<br/>static status"]
+  pipeline["PipelineService"]
+  response["ProcessResponse / errors / WS events"]
+  client -->|upload| audio
+  client -->|message| text
+  client -->|live audio| ws
+  client -->|list/detail| history
+  client -->|trajectory| state
+  client -->|health check| health
+  audio -->|process| pipeline
+  text -->|process| pipeline
+  ws -->|end_turn| pipeline
+  pipeline -->|JSON or events| response

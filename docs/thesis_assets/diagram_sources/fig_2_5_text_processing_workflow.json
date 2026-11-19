@@ -1,0 +1,117 @@
+{
+  "id": "fig_2_5_text_processing_workflow",
+  "number": "2.5",
+  "category": "workflows",
+  "title": "Text-only processing workflow",
+  "caption": "Figure 2.5. Text turns bypass acoustic inference and are marked as unmeasured.",
+  "explanation": "A validated text request creates a state record with observation_valid=false and source=text_only. It does not call the acoustic feature extractor or HumanStateEngine inference. StateFusion receives the unmeasured marker; dialogue policy and prompt construction still run. Only successful generated turns are persisted.",
+  "nodes": [
+    {
+      "id": "input",
+      "label": "Text message"
+    },
+    {
+      "id": "validate",
+      "label": "Pydantic request validation"
+    },
+    {
+      "id": "state",
+      "label": "HSR metadata: invalid / text_only"
+    },
+    {
+      "id": "bypass",
+      "label": "No audio features or HSE inference"
+    },
+    {
+      "id": "fusion",
+      "label": "StateFusion handles unmeasured input"
+    },
+    {
+      "id": "policy",
+      "label": "Rule-based dialogue policy"
+    },
+    {
+      "id": "memory",
+      "label": "Conversation memory + prompt"
+    },
+    {
+      "id": "llm",
+      "label": "Configured LLM provider"
+    },
+    {
+      "id": "persist",
+      "label": "Persist successful conversation turn"
+    },
+    {
+      "id": "out",
+      "label": "JSON response to client"
+    }
+  ],
+  "edges": [
+    {
+      "from": "input",
+      "to": "validate",
+      "label": "POST /api/v1/message"
+    },
+    {
+      "from": "validate",
+      "to": "state",
+      "label": "valid message"
+    },
+    {
+      "from": "state",
+      "to": "bypass",
+      "label": "observation_valid=false"
+    },
+    {
+      "from": "bypass",
+      "to": "fusion",
+      "label": "text and conversation context"
+    },
+    {
+      "from": "fusion",
+      "to": "policy",
+      "label": "neutral internal defaults"
+    },
+    {
+      "from": "policy",
+      "to": "memory",
+      "label": "selected strategy"
+    },
+    {
+      "from": "memory",
+      "to": "llm",
+      "label": "prompt"
+    },
+    {
+      "from": "llm",
+      "to": "persist",
+      "label": "success only"
+    },
+    {
+      "from": "persist",
+      "to": "out",
+      "label": "response"
+    }
+  ],
+  "references": [
+    "backend/app/api/process.py:process_text_message",
+    "backend/app/services/pipeline_service.py:process_text",
+    "ai/dialogue/fusion/state_fusion.py",
+    "ai/dialogue/dialogue_service.py",
+    "ai/dialogue/policy/dialogue_policy.py",
+    "database/repository.py:add_turn"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 664,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

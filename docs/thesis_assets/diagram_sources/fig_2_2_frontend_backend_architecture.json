@@ -1,0 +1,148 @@
+{
+  "id": "fig_2_2_frontend_backend_architecture",
+  "number": "2.2",
+  "category": "architecture",
+  "title": "Frontend–backend architecture",
+  "caption": "Figure 2.2. Frontend inputs, API communication, and returned interaction data.",
+  "explanation": "The client offers text chat, audio upload, live microphone interaction, dashboard, and history views. REST handles text, uploads, and retrieval; WebSocket carries live audio and event messages. Responses include transcript, HSR metadata, dialogue strategy, and assistant text where applicable.",
+  "nodes": [
+    {
+      "id": "ui",
+      "label": "Chat, Dashboard, History UI",
+      "row": 0,
+      "col": 0
+    },
+    {
+      "id": "text",
+      "label": "Text input",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "upload",
+      "label": "Audio file input",
+      "row": 2,
+      "col": 0
+    },
+    {
+      "id": "mic",
+      "label": "Microphone capture",
+      "row": 3,
+      "col": 0
+    },
+    {
+      "id": "rest",
+      "label": "REST API",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "ws",
+      "label": "WebSocket session",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "backend",
+      "label": "FastAPI + PipelineService",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "out",
+      "label": "Transcript, state, strategy, response",
+      "row": 3,
+      "col": 2
+    },
+    {
+      "id": "history",
+      "label": "Session history from API",
+      "row": 0,
+      "col": 1
+    }
+  ],
+  "edges": [
+    {
+      "from": "ui",
+      "to": "text",
+      "label": "submit"
+    },
+    {
+      "from": "ui",
+      "to": "upload",
+      "label": "select file"
+    },
+    {
+      "from": "ui",
+      "to": "mic",
+      "label": "start/capture"
+    },
+    {
+      "from": "text",
+      "to": "rest",
+      "label": "POST /message"
+    },
+    {
+      "from": "upload",
+      "to": "rest",
+      "label": "POST /process"
+    },
+    {
+      "from": "mic",
+      "to": "ws",
+      "label": "PCM chunks/end_turn"
+    },
+    {
+      "from": "rest",
+      "to": "backend",
+      "label": "request"
+    },
+    {
+      "from": "ws",
+      "to": "backend",
+      "label": "session events"
+    },
+    {
+      "from": "backend",
+      "to": "out",
+      "label": "processed turn"
+    },
+    {
+      "from": "out",
+      "to": "ui",
+      "label": "render"
+    },
+    {
+      "from": "rest",
+      "to": "history",
+      "label": "GET list/detail"
+    },
+    {
+      "from": "history",
+      "to": "ui",
+      "label": "history view"
+    }
+  ],
+  "references": [
+    "frontend/src/App.jsx",
+    "frontend/src/ChatPage.jsx",
+    "frontend/src/hooks/useStreamingSession.js",
+    "frontend/src/pages/DashboardPage.jsx",
+    "frontend/src/pages/HistoryPage.jsx",
+    "backend/app/api/process.py",
+    "backend/app/api/streaming.py",
+    "backend/app/schemas/process.py"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 664,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

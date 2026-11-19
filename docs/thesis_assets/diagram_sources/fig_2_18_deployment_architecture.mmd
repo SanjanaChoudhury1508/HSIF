@@ -1,0 +1,15 @@
+flowchart LR
+  %% Figure 2.18: Local development deployment architecture
+  browser["Browser / React client"]
+  vite["Vite dev server (default 5173)"]
+  fastapi["FastAPI / Uvicorn (configured 127.0.0.1:8000)"]
+  pg["Docker Compose PostgreSQL 18<br/>host 5434 → container 5432"]
+  env["Private environment configuration<br/>(names documented; values not shown)"]
+  llm["External Groq or Gemini API<br/>selected provider only"]
+  volume["Named PostgreSQL volume<br/>hsif_postgres_data"]
+  browser -->|HTTP| vite
+  vite -->|REST / WS| fastapi
+  fastapi -->|SQLAlchemy| pg
+  env -->|settings/credentials| fastapi
+  fastapi -->|provider API request| llm
+  pg -->|persistent volume| volume

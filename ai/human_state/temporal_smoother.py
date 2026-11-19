@@ -17,7 +17,7 @@ class TemporalSmoother:
     def __init__(
         self,
         alpha: float = 0.4,
-        emotion_confirmation_count: int = 2,
+        emotion_confirmation_count: int = 1,
     ) -> None:
         if isinstance(alpha, bool) or not isinstance(alpha, (int, float)):
             raise TypeError("alpha must be numeric")

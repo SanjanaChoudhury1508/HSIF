@@ -1,0 +1,23 @@
+flowchart LR
+  %% Figure 2.3: Backend component architecture
+  routes["process.py / streaming.py routes"]
+  pipeline["PipelineService"]
+  speech["SpeechService / preprocessing / VAD / Whisper"]
+  features["AcousticFeatureExtractor"]
+  engine["HumanStateEngine"]
+  tracker["TemporalSmoother / StateTracker"]
+  dialogue["DialogueService / StateFusion"]
+  policy["DialoguePolicy"]
+  llm["LLMService / GroqProvider / GeminiProvider"]
+  repo["SessionRepository"]
+  db["SQLAlchemy models / PostgreSQL"]
+  routes -->|dispatch| pipeline
+  pipeline -->|audio path| speech
+  speech -->|VAD segments| features
+  features -->|features and timing| engine
+  engine -->|state| tracker
+  tracker -->|state + validity| dialogue
+  dialogue -->|fused state| policy
+  policy -->|prompt context| llm
+  pipeline -->|successful turn| repo
+  repo -->|ORM operations| db

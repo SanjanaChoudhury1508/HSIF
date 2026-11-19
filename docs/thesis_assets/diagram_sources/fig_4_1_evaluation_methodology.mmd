@@ -1,0 +1,13 @@
+flowchart LR
+  %% Figure 4.1: Evaluation methodology and evidence tracks
+  crema["CREMA-D emotion<br/>7,442 recordings<br/>Evaluation, not training"]
+  speech["Speech benchmark<br/>1 audio/reference fixture"]
+  hsr["HSR benchmark<br/>4 synthetic profiles × 5"]
+  dialogue["Dialogue policy<br/>5 scenarios × 30 per mode"]
+  gemini["Gemini response comparison<br/>5 scenarios, 10 historical calls"]
+  scope["Different evidence types; no single aggregate score"]
+  crema -->|labeled dataset metrics| scope
+  speech -->|one-fixture WER/CER/latency| scope
+  hsr -->|directionality/bounds/determinism| scope
+  dialogue -->|policy behavior only| scope
+  gemini -->|exploratory paired ratings| scope

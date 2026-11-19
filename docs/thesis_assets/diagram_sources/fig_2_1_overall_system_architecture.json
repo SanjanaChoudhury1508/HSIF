@@ -1,0 +1,196 @@
+{
+  "id": "fig_2_1_overall_system_architecture",
+  "number": "2.1",
+  "category": "architecture",
+  "title": "Overall HSIF system architecture",
+  "caption": "Figure 2.1. Implemented HSIF components and external LLM services.",
+  "explanation": "The React/Vite client communicates with FastAPI through audio/text REST endpoints and a live-audio WebSocket. Backend orchestration connects speech processing, heuristic state estimation, dialogue policy, LLM provider selection, and PostgreSQL persistence. Groq is the source-code default and Gemini is selectable; the diagram does not imply provider fallback.",
+  "nodes": [
+    {
+      "id": "frontend",
+      "label": "React / Vite frontend",
+      "row": 0,
+      "col": 0
+    },
+    {
+      "id": "rest",
+      "label": "REST: audio upload and text",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "ws",
+      "label": "WebSocket: live microphone",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "api",
+      "label": "FastAPI routes",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "pipe",
+      "label": "PipelineService orchestration",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "speech",
+      "label": "SpeechService: conversion, VAD, Whisper",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "hsr",
+      "label": "HumanStateEngine: five heuristic dimensions",
+      "row": 2,
+      "col": 0
+    },
+    {
+      "id": "state",
+      "label": "Validity, smoothing, StateTracker",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "dialogue",
+      "label": "StateFusion and DialoguePolicy",
+      "row": 3,
+      "col": 0
+    },
+    {
+      "id": "prompt",
+      "label": "ConversationMemory and PromptBuilder",
+      "row": 3,
+      "col": 1
+    },
+    {
+      "id": "llm",
+      "label": "LLMService provider adapter",
+      "row": 3,
+      "col": 2
+    },
+    {
+      "id": "groq",
+      "label": "External Groq API (default)",
+      "row": 4,
+      "col": 0
+    },
+    {
+      "id": "gemini",
+      "label": "External Gemini API (optional)",
+      "row": 4,
+      "col": 1
+    },
+    {
+      "id": "db",
+      "label": "PostgreSQL: sessions, conversation_turns",
+      "row": 4,
+      "col": 2
+    }
+  ],
+  "edges": [
+    {
+      "from": "frontend",
+      "to": "rest",
+      "label": "request"
+    },
+    {
+      "from": "frontend",
+      "to": "ws",
+      "label": "audio chunks"
+    },
+    {
+      "from": "rest",
+      "to": "api",
+      "label": "HTTP"
+    },
+    {
+      "from": "ws",
+      "to": "api",
+      "label": "events"
+    },
+    {
+      "from": "api",
+      "to": "pipe",
+      "label": "dispatch"
+    },
+    {
+      "from": "pipe",
+      "to": "speech",
+      "label": "audio only"
+    },
+    {
+      "from": "speech",
+      "to": "hsr",
+      "label": "transcript and features"
+    },
+    {
+      "from": "hsr",
+      "to": "state",
+      "label": "observation"
+    },
+    {
+      "from": "state",
+      "to": "dialogue",
+      "label": "current valid state"
+    },
+    {
+      "from": "dialogue",
+      "to": "prompt",
+      "label": "strategy and context"
+    },
+    {
+      "from": "prompt",
+      "to": "llm",
+      "label": "prompt"
+    },
+    {
+      "from": "llm",
+      "to": "groq",
+      "label": "selected provider"
+    },
+    {
+      "from": "llm",
+      "to": "gemini",
+      "label": "selected provider"
+    },
+    {
+      "from": "pipe",
+      "to": "db",
+      "label": "successful turn"
+    },
+    {
+      "from": "api",
+      "to": "frontend",
+      "label": "response/events"
+    }
+  ],
+  "references": [
+    "frontend/src/App.jsx",
+    "frontend/src/ChatPage.jsx",
+    "backend/app/main.py",
+    "backend/app/api/process.py",
+    "backend/app/api/streaming.py",
+    "backend/app/services/pipeline_service.py",
+    "ai/speech/speech_service.py",
+    "ai/human_state/human_state_engine.py",
+    "ai/dialogue/dialogue_service.py",
+    "backend/app/services/llm/llm_service.py",
+    "database/models.py"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 798,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

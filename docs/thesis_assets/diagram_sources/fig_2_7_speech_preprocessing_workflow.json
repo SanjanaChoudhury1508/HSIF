@@ -1,0 +1,114 @@
+{
+  "id": "fig_2_7_speech_preprocessing_workflow",
+  "number": "2.7",
+  "category": "workflows",
+  "title": "Audio preprocessing and speech recognition",
+  "caption": "Figure 2.7. Supported upload validation, conversion, segmentation, transcription, and no-speech handling.",
+  "explanation": "Uploads are limited by extension and file size before temporary storage. ffmpeg produces 16 kHz mono signed 16-bit PCM. Librosa-based VAD uses 30 ms frames and RMS threshold .01. Faster-Whisper transcribes the audio; acoustic pitch is extracted per speech segment where the segment is usable. Empty transcript raises a no-speech processing error.",
+  "nodes": [
+    {
+      "id": "formats",
+      "label": "WAV / MP3 / M4A / OGG / FLAC / AAC"
+    },
+    {
+      "id": "limits",
+      "label": "25 MiB upload maximum"
+    },
+    {
+      "id": "convert",
+      "label": "16 kHz mono signed 16-bit PCM"
+    },
+    {
+      "id": "vad",
+      "label": "30 ms frames; RMS threshold .01"
+    },
+    {
+      "id": "segments",
+      "label": "Speech intervals and pauses"
+    },
+    {
+      "id": "transcribe",
+      "label": "Faster-Whisper base, CPU/int8"
+    },
+    {
+      "id": "features",
+      "label": "Per-segment pitch + timing/energy"
+    },
+    {
+      "id": "empty",
+      "label": "Blank transcript → no-speech error"
+    },
+    {
+      "id": "clean",
+      "label": "Temporary audio cleanup"
+    }
+  ],
+  "edges": [
+    {
+      "from": "formats",
+      "to": "limits",
+      "label": "validate extension"
+    },
+    {
+      "from": "limits",
+      "to": "convert",
+      "label": "accepted file"
+    },
+    {
+      "from": "convert",
+      "to": "vad",
+      "label": "WAV"
+    },
+    {
+      "from": "vad",
+      "to": "segments",
+      "label": "speech intervals"
+    },
+    {
+      "from": "segments",
+      "to": "transcribe",
+      "label": "audio transcript"
+    },
+    {
+      "from": "segments",
+      "to": "features",
+      "label": "selected intervals"
+    },
+    {
+      "from": "transcribe",
+      "to": "empty",
+      "label": "transcript validation"
+    },
+    {
+      "from": "features",
+      "to": "clean",
+      "label": "derived file cleanup"
+    },
+    {
+      "from": "empty",
+      "to": "clean",
+      "label": "finally"
+    }
+  ],
+  "references": [
+    "backend/app/api/process.py:ALLOWED_AUDIO_EXTENSIONS",
+    "backend/app/api/process.py:process_audio",
+    "ai/speech/preprocessing/audio_processor.py",
+    "ai/speech/vad/detector.py",
+    "ai/speech/whisper/transcriber.py",
+    "ai/speech/feature_extraction/acoustic_features.py",
+    "backend/app/services/pipeline_service.py:_is_valid_observation"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 530,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

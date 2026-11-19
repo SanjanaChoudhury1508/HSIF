@@ -1,6 +1,8 @@
+
 from datetime import datetime, timezone
 
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from database.database import SessionLocal
 from database.models import ConversationTurn, Session
@@ -74,16 +76,90 @@ class SessionRepository:
             statement = (
                 select(ConversationTurn)
                 .where(ConversationTurn.session_id == session_id)
-                .order_by(ConversationTurn.created_at.desc())
+                .order_by(
+                    ConversationTurn.created_at.desc(),
+                    ConversationTurn.id.desc(),
+                )
                 .limit(limit)
             )
 
             turns = list(db.scalars(statement).all())
-
-            # Return chronological order for conversation history.
             turns.reverse()
 
             return turns
+
+    def list_sessions(self) -> list[dict]:
+        """Return all saved sessions, newest first."""
+
+        with self.db_session_factory() as db:
+            statement = (
+                select(Session)
+                .options(selectinload(Session.turns))
+                .order_by(Session.updated_at.desc())
+            )
+
+            sessions = db.scalars(statement).all()
+
+            results = []
+
+            for session in sessions:
+                turns = sorted(
+                    session.turns,
+                    key=lambda turn: (turn.created_at, turn.id),
+                )
+
+                latest_turn = turns[-1] if turns else None
+
+                results.append({
+                    "session_id": session.id,
+                    "created_at": session.created_at,
+                    "updated_at": session.updated_at,
+                    "turn_count": len(turns),
+                    "preview": (
+                        latest_turn.user_message
+                        if latest_turn
+                        else ""
+                    ),
+                })
+
+            return results
+
+    def get_session_history(self, session_id: str) -> dict | None:
+        """Return one session and all its conversation turns."""
+
+        with self.db_session_factory() as db:
+            session = db.get(Session, session_id)
+
+            if session is None:
+                return None
+
+            statement = (
+                select(ConversationTurn)
+                .where(ConversationTurn.session_id == session_id)
+                .order_by(
+                    ConversationTurn.created_at.asc(),
+                    ConversationTurn.id.asc(),
+                )
+            )
+
+            turns = db.scalars(statement).all()
+
+            return {
+                "session_id": session.id,
+                "created_at": session.created_at,
+                "updated_at": session.updated_at,
+                "turns": [
+                    {
+                        "id": turn.id,
+                        "user_message": turn.user_message,
+                        "assistant_message": turn.assistant_message,
+                        "human_state": turn.human_state,
+                        "dialogue_strategy": turn.dialogue_strategy,
+                        "created_at": turn.created_at,
+                    }
+                    for turn in turns
+                ],
+            }
 
     def clear_session(self, session_id: str) -> bool:
         with self.db_session_factory() as db:

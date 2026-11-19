@@ -2,6 +2,8 @@ import math
 
 
 class EmotionDetector:
+    """Small rule-based acoustic estimator; scores are heuristic, not calibrated."""
+
     def _clamp(self, value, minimum=0.0, maximum=1.0):
         return max(minimum, min(maximum, value))
 
@@ -28,16 +30,17 @@ class EmotionDetector:
         max_pitch = self._safe_float(features.get("max_pitch", 0.0))
         mean_energy = self._safe_float(features.get("mean_energy", 0.0))
 
-        if mean_pitch <= 0 or mean_energy <= 0:
+        if (
+            mean_pitch <= 0
+            or mean_energy <= 0
+            or min_pitch <= 0
+            or max_pitch <= 0
+            or min_pitch > max_pitch
+        ):
             return {
-                "label": "neutral",
-                "score": 0.5,
+                "label": "unknown",
+                "score": 0.0,
             }
-
-        # Treat inconsistent pitch bounds as unavailable.
-        if min_pitch > max_pitch:
-            min_pitch = 0.0
-            max_pitch = 0.0
 
         pitch_range = max(0.0, max_pitch - min_pitch)
 

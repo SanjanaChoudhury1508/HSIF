@@ -1,0 +1,33 @@
+flowchart LR
+  %% Figure 2.4: Audio upload processing workflow
+  upload["Multipart audio upload"]
+  validate["Extension + 25 MiB validation"]
+  temp["Temporary file"]
+  convert["ffmpeg: 16 kHz mono s16 PCM"]
+  vad["VAD: 30 ms frames, RMS .01"]
+  whisper["Faster-Whisper base, CPU/int8"]
+  features["Features from VAD speech segments"]
+  check["Transcript and observation validity"]
+  hsr["HumanStateEngine + temporal state"]
+  policy["State fusion + dialogue policy"]
+  llm["Configured LLM provider"]
+  persist["Persist successful turn"]
+  response["ProcessResponse to frontend"]
+  cleanup["Remove temporary files"]
+  failure["No-speech or provider failure: no successful turn"]
+  upload -->|multipart| validate
+  validate -->|valid file| temp
+  temp -->|process in thread pool| convert
+  convert -->|converted audio| vad
+  vad -->|audio + speech intervals| whisper
+  whisper -->|transcript| features
+  features -->|features/timing| check
+  check -->|nonempty transcript| hsr
+  check -->|empty transcript| failure
+  hsr -->|state + validity| policy
+  policy -->|prompt| llm
+  llm -->|generation succeeds| persist
+  llm -->|generation fails| failure
+  persist -->|finally cleanup| cleanup
+  failure -->|finally cleanup| cleanup
+  cleanup -->|response after cleanup| response

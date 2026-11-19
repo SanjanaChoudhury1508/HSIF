@@ -1,0 +1,32 @@
+flowchart LR
+  %% Figure 2.9: Five human-state dimensions and input features
+  pitch["Pitch: mean, min, max, range"]
+  energy["Mean RMS energy"]
+  pauses["Pause count, mean/max duration, silence"]
+  activity["Speech and silence duration"]
+  emotion["Emotion: pitch + energy"]
+  hes["Hesitation: pause metrics"]
+  conf["Confidence: pauses + duration + pitch + energy"]
+  eng["Engagement: activity + energy + pauses + pitch"]
+  load["Cognitive load: pauses + activity + pitch ratio + energy"]
+  range["Each score is bounded; heuristics, not calibrated probabilities"]
+  pitch -->|input| emotion
+  energy -->|input| emotion
+  pauses -->|input| hes
+  pauses -->|input| conf
+  activity -->|duration| conf
+  pitch -->|input| conf
+  energy -->|input| conf
+  activity -->|input| eng
+  energy -->|input| eng
+  pauses -->|input| eng
+  pitch -->|input| eng
+  pauses -->|input| load
+  activity -->|input| load
+  pitch -->|ratio| load
+  energy -->|input| load
+  emotion -->|estimate| range
+  hes -->|estimate| range
+  conf -->|estimate| range
+  eng -->|estimate| range
+  load -->|estimate| range

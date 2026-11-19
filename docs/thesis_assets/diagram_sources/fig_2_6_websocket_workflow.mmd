@@ -1,0 +1,24 @@
+flowchart LR
+  %% Figure 2.6: Live microphone WebSocket workflow
+  connect["Connect /ws/session/{session_id}"]
+  start["start_session → session_ready"]
+  chunks["Binary 16 kHz mono PCM chunks"]
+  chunk_event["speech_chunk: chunk timing/activity metadata"]
+  buffer["Turn buffer (10 MiB limit)"]
+  interim["transcript_partial: periodic transcript"]
+  end["end_turn"]
+  final["Full-recording pipeline in thread pool"]
+  events["transcript_final, human_state_update, dialogue_strategy, assistant_response"]
+  error["error event: recoverable flag / code / message"]
+  close["end_session or disconnect"]
+  connect -->|UUID accepted| start
+  start -->|session active| chunks
+  chunks -->|each valid PCM chunk| chunk_event
+  chunk_event -->|append audio| buffer
+  buffer -->|periodic when threshold met| interim
+  buffer -->|client ends turn| end
+  end -->|full buffer| final
+  final -->|success| events
+  final -->|processing failure| error
+  events -->|next turn possible| chunks
+  error -->|if recoverable| chunks

@@ -1,0 +1,121 @@
+{
+  "id": "fig_2_19_security_data_flow",
+  "number": "2.19",
+  "category": "deployment_security",
+  "title": "Security and data-handling flow",
+  "caption": "Figure 2.19. Current handling controls and verified security limitations.",
+  "explanation": "Audio requests receive extension/size validation and temporary files are removed after processing; audio is not stored in conversation tables. Successful message/state/strategy data are persisted in PostgreSQL. Provider credentials are configured through environment variables. Browser-local authentication is only a prototype, and API/WS ownership checks and rate limiting are absent; this is not production-secure authentication.",
+  "nodes": [
+    {
+      "id": "upload",
+      "label": "Audio upload: extension + size checks",
+      "row": 0,
+      "col": 0
+    },
+    {
+      "id": "temp",
+      "label": "Temporary audio file",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "process",
+      "label": "Process and clean up",
+      "row": 2,
+      "col": 0
+    },
+    {
+      "id": "db",
+      "label": "PostgreSQL: text, HSR JSON, strategy",
+      "row": 3,
+      "col": 0
+    },
+    {
+      "id": "secret",
+      "label": "Provider credentials from environment",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "browser",
+      "label": "Browser-local prototype login",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "api",
+      "label": "REST / WebSocket session ID",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "limitation",
+      "label": "No server auth/ownership enforcement or rate limit",
+      "row": 3,
+      "col": 2
+    },
+    {
+      "id": "raw",
+      "label": "Raw audio not stored in turn tables",
+      "row": 4,
+      "col": 1
+    }
+  ],
+  "edges": [
+    {
+      "from": "upload",
+      "to": "temp",
+      "label": "accepted file"
+    },
+    {
+      "from": "temp",
+      "to": "process",
+      "label": "temporary processing"
+    },
+    {
+      "from": "process",
+      "to": "db",
+      "label": "successful turn only"
+    },
+    {
+      "from": "process",
+      "to": "raw",
+      "label": "temporary cleanup"
+    },
+    {
+      "from": "secret",
+      "to": "process",
+      "label": "provider configuration"
+    },
+    {
+      "from": "browser",
+      "to": "api",
+      "label": "session ID supplied by client"
+    },
+    {
+      "from": "api",
+      "to": "limitation",
+      "label": "no ownership check"
+    }
+  ],
+  "references": [
+    "backend/app/api/process.py",
+    "backend/app/api/streaming.py",
+    "frontend/src/services/localSession.js",
+    "database/models.py",
+    ".gitignore",
+    "docker-compose.yml"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 798,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

@@ -208,7 +208,7 @@ def test_empty_input_returns_safe_human_state(engine):
         "cognitive_load",
     }
 
-    assert result["emotion"]["label"] == "neutral"
+    assert result["emotion"]["label"] == "unknown"
 
     for component in (
         "hesitation",
@@ -222,7 +222,7 @@ def test_empty_input_returns_safe_human_state(engine):
 def test_none_input_returns_safe_human_state(engine):
     result = engine.process_to_dict(None)
 
-    assert result["emotion"]["label"] == "neutral"
+    assert result["emotion"]["label"] == "unknown"
 
     for component in (
         "hesitation",
@@ -240,7 +240,7 @@ def test_missing_optional_sections_are_handled(engine):
 
     result = engine.process_to_dict(speech_result)
 
-    assert result["emotion"]["label"] == "neutral"
+    assert result["emotion"]["label"] == "unknown"
 
     for component in (
         "hesitation",
@@ -302,7 +302,7 @@ def test_missing_feature_values_are_safe(engine):
 
     result = engine.process_to_dict(speech_result)
 
-    assert result["emotion"]["label"] == "neutral"
+    assert result["emotion"]["label"] == "unknown"
 
     for component in (
         "hesitation",

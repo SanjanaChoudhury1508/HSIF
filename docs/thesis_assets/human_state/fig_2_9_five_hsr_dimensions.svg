@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1284" height="664" viewBox="0 0 1284 664">
+<title>Five human-state dimensions and input features</title>
+<desc>Figure 2.9. Implemented feature families used by the five HSR estimators.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/></marker></defs>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="642.0" y="48" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#18324b">Five human-state dimensions and input features</text>
+<path d="M 378.0 192.0 L 504.0 234.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 642.0 192.0 L 642.0 234.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 1044.0 192.0 L 1044.0 234.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 906.0 192.0 L 378.0 368.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 240.0 326.0 L 240.0 368.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 240.0 192.0 L 240.0 368.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 573.0 192.0 L 309.0 368.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 378.0 326.0 L 504.0 368.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 642.0 192.0 L 642.0 368.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 975.0 192.0 L 711.0 368.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 309.0 192.0 L 573.0 368.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 1044.0 192.0 L 1044.0 368.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 420.0 310.0 L 864.0 384.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 378.0 192.0 L 906.0 368.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 711.0 192.0 L 975.0 368.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 573.0 326.0 L 309.0 502.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 906.0 326.0 L 378.0 502.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 240.0 460.0 L 240.0 502.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 504.0 460.0 L 378.0 502.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 864.0 444.0 L 420.0 518.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="60" y="100" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="146.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Pitch: mean, min, max, range</text>
+<rect x="462" y="100" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="146.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Mean RMS energy</text>
+<rect x="864" y="100" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="1044.0" y="135.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Pause count, mean/max duration,</text>
+<text x="1044.0" y="158.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">silence</text>
+<rect x="60" y="234" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="280.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Speech and silence duration</text>
+<rect x="462" y="234" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="280.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Emotion: pitch + energy</text>
+<rect x="864" y="234" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="1044.0" y="280.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Hesitation: pause metrics</text>
+<rect x="60" y="368" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="403.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Confidence: pauses + duration +</text>
+<text x="240.0" y="426.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">pitch + energy</text>
+<rect x="462" y="368" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="403.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Engagement: activity + energy +</text>
+<text x="642.0" y="426.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">pauses + pitch</text>
+<rect x="864" y="368" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="1044.0" y="403.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Cognitive load: pauses + activity</text>
+<text x="1044.0" y="426.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">+ pitch ratio + energy</text>
+<rect x="60" y="502" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="537.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Each score is bounded; heuristics,</text>
+<text x="240.0" y="560.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">not calibrated probabilities</text>
+</svg>

@@ -1,0 +1,44 @@
+{
+  "id": "fig_4_6_gemini_response_comparison",
+  "number": "4.6",
+  "category": "evaluation",
+  "title": "Exploratory Gemini response comparison",
+  "caption": "Figure 4.6. Historical response ratings: exploratory results; reviewer provenance was not recorded.",
+  "explanation": "Across five scenarios, the historical artifact records ten direct Gemini calls. The adaptive condition has mean rating 4.24/5 versus 3.96/5 baseline, and was preferred in four of five pairs. Reviewer identity and provenance are absent and the sample is small; this is exploratory evidence, not a controlled human study. The evaluation README contains conflicting summary values.",
+  "nodes": [],
+  "edges": [],
+  "references": [
+    "evaluation/benchmark_gemini_responses.py",
+    "evaluation/results/gemini_response_20261105T180011Z_5ec43391.json",
+    "evaluation/README.md"
+  ],
+  "kind": "chart",
+  "metrics": [
+    {
+      "label": "Baseline mean rating",
+      "value": 3.96,
+      "unit": "/5"
+    },
+    {
+      "label": "Adaptive mean rating",
+      "value": 4.24,
+      "unit": "/5"
+    },
+    {
+      "label": "Adaptive pair preferences",
+      "value": 4,
+      "unit": "of 5"
+    }
+  ],
+  "canvas": {
+    "width": 1500,
+    "height": 456,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

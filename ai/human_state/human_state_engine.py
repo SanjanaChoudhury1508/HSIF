@@ -127,22 +127,26 @@ class HumanStateEngine:
             "excited",
             "sad",
             "happy",
+            "unknown",
         }
 
         if not isinstance(result, Mapping):
             return {
-                "label": "neutral",
-                "score": 0.5,
+                "label": "unknown",
+                "score": 0.0,
             }
 
-        label = result.get("label", "neutral")
+        label = result.get("label", "unknown")
 
         if not isinstance(label, str):
-            label = "neutral"
+            label = "unknown"
         else:
             label = label.strip().lower()
             if label not in allowed_labels:
-                label = "neutral"
+                label = "unknown"
+
+        if label == "unknown":
+            return {"label": "unknown", "score": 0.0}
 
         return {
             "label": label,
@@ -187,8 +191,8 @@ class HumanStateEngine:
         speech_result = self._validate_input(speech_result)
         if not observation_valid:
             state = build_human_state(
-                emotion_label="neutral",
-                emotion_score=0.5,
+                emotion_label="unknown",
+                emotion_score=0.0,
                 hesitation_score=0.5,
                 confidence_score=0.5,
                 engagement_score=0.5,
@@ -223,6 +227,21 @@ class HumanStateEngine:
         emotion = self._normalize_emotion_result(
             emotion_result
         )
+
+        if emotion["label"] == "unknown":
+            state = build_human_state(
+                emotion_label="unknown",
+                emotion_score=0.0,
+                hesitation_score=0.5,
+                confidence_score=0.5,
+                engagement_score=0.5,
+                cognitive_load_score=0.5,
+                timestamp=timestamp,
+                observation_valid=False,
+            )
+            self._validate_timestamp_order(timestamp)
+            self.state_tracker.add_state(state)
+            return state
 
         hesitation = self._normalize_score_result(
             hesitation_result

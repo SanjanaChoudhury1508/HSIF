@@ -1,0 +1,130 @@
+{
+  "id": "fig_2_17_persistence_workflow",
+  "number": "2.17",
+  "category": "database_api",
+  "title": "Conversation persistence and retrieval",
+  "caption": "Figure 2.17. Successful turn persistence and session/history retrieval.",
+  "explanation": "A session ID identifies a session; the repository can create or retrieve the session before turn processing. A conversation turn is added only after successful generation. History endpoints read summaries/details from PostgreSQL, and the state endpoint returns trajectory data reconstructed by the pipeline service. Frontend account/session prototype data in localStorage is separate from conversation persistence.",
+  "nodes": [
+    {
+      "id": "id",
+      "label": "Session ID",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "session",
+      "label": "SessionRepository get/create",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "process",
+      "label": "Process turn: speech/text, HSR, dialogue, LLM",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "ok",
+      "label": "Generation succeeds",
+      "row": 3,
+      "col": 0
+    },
+    {
+      "id": "turn",
+      "label": "Insert conversation_turn",
+      "row": 4,
+      "col": 0
+    },
+    {
+      "id": "fail",
+      "label": "Failure: no successful turn insert",
+      "row": 3,
+      "col": 2
+    },
+    {
+      "id": "history",
+      "label": "List/detail history API",
+      "row": 5,
+      "col": 0
+    },
+    {
+      "id": "trajectory",
+      "label": "State trajectory API",
+      "row": 5,
+      "col": 1
+    },
+    {
+      "id": "local",
+      "label": "Browser localStorage prototype (separate)",
+      "row": 1,
+      "col": 2
+    }
+  ],
+  "edges": [
+    {
+      "from": "id",
+      "to": "session",
+      "label": "session lookup"
+    },
+    {
+      "from": "session",
+      "to": "process",
+      "label": "turn request"
+    },
+    {
+      "from": "process",
+      "to": "ok",
+      "label": "provider returns text"
+    },
+    {
+      "from": "ok",
+      "to": "turn",
+      "label": "persist"
+    },
+    {
+      "from": "process",
+      "to": "fail",
+      "label": "processing/provider error"
+    },
+    {
+      "from": "turn",
+      "to": "history",
+      "label": "retrieve turns"
+    },
+    {
+      "from": "session",
+      "to": "history",
+      "label": "list sessions"
+    },
+    {
+      "from": "turn",
+      "to": "trajectory",
+      "label": "stored HSR history"
+    },
+    {
+      "from": "local",
+      "to": "history",
+      "label": "not source of DB history"
+    }
+  ],
+  "references": [
+    "backend/app/services/pipeline_service.py",
+    "database/repository.py",
+    "database/models.py",
+    "backend/app/api/process.py",
+    "frontend/src/services/localSession.js"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 932,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

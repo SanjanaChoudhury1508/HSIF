@@ -1,0 +1,20 @@
+flowchart LR
+  %% Figure 2.17: Conversation persistence and retrieval
+  id["Session ID"]
+  session["SessionRepository get/create"]
+  process["Process turn: speech/text, HSR, dialogue, LLM"]
+  ok["Generation succeeds"]
+  turn["Insert conversation_turn"]
+  fail["Failure: no successful turn insert"]
+  history["List/detail history API"]
+  trajectory["State trajectory API"]
+  local["Browser localStorage prototype (separate)"]
+  id -->|session lookup| session
+  session -->|turn request| process
+  process -->|provider returns text| ok
+  ok -->|persist| turn
+  process -->|processing/provider error| fail
+  turn -->|retrieve turns| history
+  session -->|list sessions| history
+  turn -->|stored HSR history| trajectory
+  local -->|not source of DB history| history

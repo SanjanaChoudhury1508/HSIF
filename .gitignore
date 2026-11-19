@@ -7,5 +7,10 @@ tests/audio/*.m4a
 
 models/
 .env
+.env.*
+!.env.example
 evaluation/datasets/crema-d/
 evaluation/krupa_implementation_review.txt
+
+# Local database backups
+*.dump

@@ -8,6 +8,11 @@ from backend.app.services.llm.llm_service import LLMService
 
 from database.repository import SessionRepository
 
+
+class NoSpeechDetectedError(ValueError):
+    """Raised when audio processing produces no usable transcript."""
+
+
 class PipelineService:
     def __init__(
         self,
@@ -30,9 +35,24 @@ class PipelineService:
 
     def process_audio(self, audio_path):
         speech_result = self.speech_service.process(audio_path)
+        transcript = (
+            speech_result.get("transcript")
+            if isinstance(speech_result, dict)
+            else None
+        )
+        if not isinstance(transcript, str) or not transcript.strip():
+            raise NoSpeechDetectedError(
+                "No speech could be transcribed from this audio. "
+                "Try a recording with clear, audible speech."
+            )
+        transcript = transcript.strip()
+        speech_result = {**speech_result, "transcript": transcript}
 
         observation_timestamp=time.time()
-        observation_valid=self._is_valid_observation(speech_result)
+        observation_valid=(
+            self._is_valid_observation(speech_result)
+            and self._has_valid_emotion_features(speech_result)
+        )
         human_state = self.human_state_engine.process_to_dict(
             speech_result,
             timestamp=observation_timestamp,
@@ -43,9 +63,16 @@ class PipelineService:
             human_state,
             current_state,
         )
+        if current_state is None:
+            persisted_human_state["_temporal"] = {
+                "timestamp": observation_timestamp,
+                "observation_valid": observation_valid,
+                "source": "audio",
+            }
+        human_state = persisted_human_state
 
         dialogue_result = self.dialogue_service.process(
-            speech_result["transcript"],
+            transcript,
             human_state
         )
 
@@ -58,7 +85,7 @@ class PipelineService:
         if self.session_id and self.repository:
             self.repository.add_turn(
                 session_id=self.session_id,
-                user_message=speech_result["transcript"],
+                user_message=transcript,
                 assistant_message=llm_response,
                 human_state=persisted_human_state,
                 dialogue_strategy=dialogue_result["policy"]["strategy"],
@@ -66,7 +93,7 @@ class PipelineService:
 
         # Update in-memory conversation history only after persistence succeeds.
         self.dialogue_service.add_response(
-            user_message=speech_result["transcript"],
+            user_message=transcript,
             assistant_message=llm_response,
             human_state=human_state,
             dialogue_strategy=dialogue_result["policy"]["strategy"],
@@ -78,6 +105,64 @@ class PipelineService:
             "dialogue": dialogue_result,
             "response": llm_response,
         }
+
+
+    def process_text(self, user_message: str):
+        """Process a typed message through the existing dialogue pipeline."""
+
+        if not isinstance(user_message, str) or not user_message.strip():
+            raise ValueError("Message cannot be empty.")
+
+        user_message = user_message.strip()
+
+        # A text turn has no current acoustic observation. Do not carry a
+        # previous audio turn's measured state forward as if it were fresh.
+        human_state = {
+            "emotion": {"label": "unknown", "score": 0.0},
+            "hesitation": {"score": 0.0},
+            "confidence": {"score": 0.0},
+            "engagement": {"score": 0.0},
+            "cognitive_load": {"score": 0.0},
+            "_temporal": {
+                "observation_valid": False,
+                "source": "text_only",
+            },
+        }
+        persisted_human_state = dict(human_state)
+
+        dialogue_result = self.dialogue_service.process(
+            user_message,
+            human_state,
+        )
+
+        llm_response = self.llm_service.generate(
+            dialogue_result["prompt"]
+        )
+
+        # Persist before updating in-memory conversation history.
+        if self.session_id and self.repository:
+            self.repository.add_turn(
+                session_id=self.session_id,
+                user_message=user_message,
+                assistant_message=llm_response,
+                human_state=persisted_human_state,
+                dialogue_strategy=dialogue_result["policy"]["strategy"],
+            )
+
+        self.dialogue_service.add_response(
+            user_message=user_message,
+            assistant_message=llm_response,
+            human_state=human_state,
+            dialogue_strategy=dialogue_result["policy"]["strategy"],
+        )
+
+        return {
+            "user_message": user_message,
+            "human_state": persisted_human_state,
+            "dialogue": dialogue_result,
+            "response": llm_response,
+        }
+
 
     @staticmethod
     def _build_persisted_human_state(
@@ -91,6 +176,7 @@ class PipelineService:
             snapshot["_temporal"] = {
                 "timestamp": state.timestamp,
                 "observation_valid": state.observation_valid,
+                "source": "audio",
             }
 
         return snapshot
@@ -162,4 +248,32 @@ class PipelineService:
             and speech_duration > 0.0
             and isinstance(segments, (list, tuple))
             and bool(segments)
+        )
+
+    @staticmethod
+    def _has_valid_emotion_features(speech_result: dict) -> bool:
+        """Whether the acoustic values required by EmotionDetector exist."""
+        features = speech_result.get("features")
+        if not isinstance(features, dict):
+            return False
+
+        try:
+            mean_pitch = float(features["mean_pitch"])
+            min_pitch = float(features["min_pitch"])
+            max_pitch = float(features["max_pitch"])
+            mean_energy = float(features["mean_energy"])
+        except (KeyError, TypeError, ValueError, OverflowError):
+            return False
+
+        return (
+            all(math.isfinite(value) for value in (
+                mean_pitch,
+                min_pitch,
+                max_pitch,
+                mean_energy,
+            ))
+            and mean_pitch > 0.0
+            and min_pitch > 0.0
+            and max_pitch >= min_pitch
+            and mean_energy > 0.0
         )

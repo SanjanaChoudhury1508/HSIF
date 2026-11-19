@@ -1,0 +1,151 @@
+{
+  "id": "fig_2_13_dialogue_strategy_decision",
+  "number": "2.13",
+  "category": "dialogue",
+  "title": "Dialogue strategy decision flow",
+  "caption": "Figure 2.13. Condensed policy precedence; synthetic cases do not establish audio-triggered coverage.",
+  "explanation": "The policy evaluates conditions in precedence order: frustration acknowledgment, reassurance, overload-related simplification or reduction, slow-down, clarification/re-engagement/continuation, follow-up or encouragement, then normal response. Several branches depend on labels not emitted by the current acoustic emotion detector; those branches are implemented but not demonstrated end-to-end by the audio classifier.",
+  "nodes": [
+    {
+      "id": "start",
+      "label": "Fused state"
+    },
+    {
+      "id": "r1",
+      "label": "1. emotion frustrated? → acknowledge_frustration"
+    },
+    {
+      "id": "r2",
+      "label": "2. hesitation ≥ .7 AND confidence ≤ .45? → reassure"
+    },
+    {
+      "id": "r3",
+      "label": "3. overloaded_uncertain AND confidence ≤ .35? → simplify"
+    },
+    {
+      "id": "r4",
+      "label": "4. interaction overloaded/overloaded_uncertain AND load ≥ .9? → reduce_information"
+    },
+    {
+      "id": "r5",
+      "label": "5. hesitation ≥ .7? → slow_down"
+    },
+    {
+      "id": "r6",
+      "label": "6. interaction overloaded? → simplify"
+    },
+    {
+      "id": "r7",
+      "label": "7. interaction struggling? → clarify"
+    },
+    {
+      "id": "r8",
+      "label": "8. interaction disengaged? → re_engage"
+    },
+    {
+      "id": "r9",
+      "label": "9. confident_engaged? → continue"
+    },
+    {
+      "id": "r10",
+      "label": "10. needs_clarification? uncertain → ask_follow_up; else clarify"
+    },
+    {
+      "id": "r11",
+      "label": "11. needs_encouragement? → encourage"
+    },
+    {
+      "id": "r12",
+      "label": "12. otherwise → normal_response"
+    },
+    {
+      "id": "caveat",
+      "label": "Precedence ordered; frustrated/uncertain labels are not emitted by current audio emotion detector"
+    }
+  ],
+  "edges": [
+    {
+      "from": "start",
+      "to": "r1",
+      "label": "evaluate"
+    },
+    {
+      "from": "r1",
+      "to": "r2",
+      "label": "if no"
+    },
+    {
+      "from": "r2",
+      "to": "r3",
+      "label": "if no"
+    },
+    {
+      "from": "r3",
+      "to": "r4",
+      "label": "if no"
+    },
+    {
+      "from": "r4",
+      "to": "r5",
+      "label": "if no"
+    },
+    {
+      "from": "r5",
+      "to": "r6",
+      "label": "if no"
+    },
+    {
+      "from": "r6",
+      "to": "r7",
+      "label": "if no"
+    },
+    {
+      "from": "r7",
+      "to": "r8",
+      "label": "if no"
+    },
+    {
+      "from": "r8",
+      "to": "r9",
+      "label": "if no"
+    },
+    {
+      "from": "r9",
+      "to": "r10",
+      "label": "if no"
+    },
+    {
+      "from": "r10",
+      "to": "r11",
+      "label": "if no"
+    },
+    {
+      "from": "r11",
+      "to": "r12",
+      "label": "if no"
+    },
+    {
+      "from": "r12",
+      "to": "caveat",
+      "label": "scope"
+    }
+  ],
+  "references": [
+    "ai/dialogue/policy/dialogue_policy.py",
+    "ai/dialogue/fusion/state_fusion.py",
+    "ai/human_state/emotion/detector.py",
+    "evaluation/benchmark_dialogue.py"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 798,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

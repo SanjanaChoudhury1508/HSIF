@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Conceptual problem in conventional voice-agent interaction</title>
+  <desc id="desc">A conventional voice-agent flow converts speech to text, infers intent, and returns an answer. The conceptual limitation shown is that affect, hesitation, and conversational history may not be represented in the response path, so the answer may miss the user's current state. The user may repeat, rephrase, or leave. This is an explanatory concept, not empirical evaluation.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#49677f"/>
+    </marker>
+    <marker id="arrow-warm" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#c66b32"/>
+    </marker>
+    <style>
+      .title { font: 700 48px Arial, sans-serif; fill: #17324b; }
+      .subtitle { font: 400 23px Arial, sans-serif; fill: #50677a; }
+      .card-title { font: 700 25px Arial, sans-serif; fill: #17324b; }
+      .body { font: 400 20px Arial, sans-serif; fill: #334b60; }
+      .small { font: 400 17px Arial, sans-serif; fill: #566d80; }
+      .label { font: 700 16px Arial, sans-serif; letter-spacing: 1.2px; fill: #49677f; }
+      .warm { fill: #9a4b1c; }
+    </style>
+  </defs>
+  <rect width="1600" height="900" fill="#ffffff"/>
+
+  <text x="80" y="92" class="title">Conceptual problem in conventional voice-agent interaction</text>
+  <text x="82" y="137" class="subtitle">A mostly linear speech-to-response path can miss signals about how the user is experiencing the exchange.</text>
+
+  <text x="82" y="205" class="label">CONVENTIONAL TURN FLOW</text>
+
+  <!-- Main linear interaction path -->
+  <g>
+    <rect x="80" y="238" width="300" height="170" rx="20" fill="#edf3f7" stroke="#9bb0c1" stroke-width="2"/>
+    <circle cx="133" cy="291" r="18" fill="#5c7e98"/>
+    <path d="M105 355 Q108 319 133 319 Q158 319 161 355 M133 309 L133 355 M112 336 L154 336" fill="none" stroke="#5c7e98" stroke-width="7" stroke-linecap="round"/>
+    <text x="183" y="291" class="card-title">User speaks</text>
+    <text x="183" y="328" class="body">Natural voice input</text>
+    <text x="183" y="360" class="small">Tone, pauses, wording</text>
+    <text x="183" y="385" class="small">arrive together</text>
+  </g>
+
+  <line x1="390" y1="323" x2="455" y2="323" stroke="#49677f" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <g>
+    <rect x="470" y="238" width="300" height="170" rx="20" fill="#edf3f7" stroke="#9bb0c1" stroke-width="2"/>
+    <text x="620" y="285" text-anchor="middle" class="label">SPEECH RECOGNITION</text>
+    <text x="620" y="326" text-anchor="middle" class="card-title">Speech → text</text>
+    <text x="620" y="365" text-anchor="middle" class="body">Words become a transcript</text>
+    <text x="620" y="391" text-anchor="middle" class="small">Acoustic detail is compressed</text>
+  </g>
+
+  <line x1="780" y1="323" x2="845" y2="323" stroke="#49677f" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <g>
+    <rect x="860" y="238" width="300" height="170" rx="20" fill="#edf3f7" stroke="#9bb0c1" stroke-width="2"/>
+    <text x="1010" y="285" text-anchor="middle" class="label">REQUEST INTERPRETATION</text>
+    <text x="1010" y="326" text-anchor="middle" class="card-title">Intent / prompt</text>
+    <text x="1010" y="365" text-anchor="middle" class="body">The request drives generation</text>
+    <text x="1010" y="391" text-anchor="middle" class="small">Often treated turn by turn</text>
+  </g>
+
+  <line x1="1170" y1="323" x2="1235" y2="323" stroke="#49677f" stroke-width="4" marker-end="url(#arrow)"/>
+
+  <g>
+    <rect x="1250" y="238" width="280" height="170" rx="20" fill="#e8f0f5" stroke="#7895aa" stroke-width="2"/>
+    <text x="1390" y="285" text-anchor="middle" class="label">AGENT RESPONSE</text>
+    <text x="1390" y="326" text-anchor="middle" class="card-title">Answer returned</text>
+    <text x="1390" y="365" text-anchor="middle" class="body">Relevant to the words</text>
+    <text x="1390" y="391" text-anchor="middle" class="small">May miss the user's state</text>
+  </g>
+
+  <!-- Context signals that can be lost in a transcript-centric path -->
+  <rect x="80" y="478" width="440" height="220" rx="20" fill="#f7f9fb" stroke="#c5d1da" stroke-width="2"/>
+  <text x="112" y="521" class="label">HUMAN SIGNALS IN THE AUDIO</text>
+  <circle cx="125" cy="565" r="7" fill="#c66b32"/>
+  <text x="148" y="572" class="body">Emotion and vocal tone</text>
+  <circle cx="125" cy="612" r="7" fill="#c66b32"/>
+  <text x="148" y="619" class="body">Hesitation and pauses</text>
+  <circle cx="125" cy="659" r="7" fill="#c66b32"/>
+  <text x="148" y="666" class="body">Change across conversation turns</text>
+
+  <path d="M520 575 C630 575 654 485 654 423" fill="none" stroke="#c66b32" stroke-width="3" stroke-dasharray="9 8" marker-end="url(#arrow-warm)"/>
+  <rect x="570" y="455" width="390" height="243" rx="20" fill="#fff7f1" stroke="#d9a17d" stroke-width="2"/>
+  <text x="765" y="499" text-anchor="middle" class="label warm">CONCEPTUAL GAP</text>
+  <text x="765" y="544" text-anchor="middle" class="card-title warm">Signals may not shape</text>
+  <text x="765" y="575" text-anchor="middle" class="card-title warm">the next response</text>
+  <text x="765" y="625" text-anchor="middle" class="body">A transcript-centric system can answer</text>
+  <text x="765" y="655" text-anchor="middle" class="body">the request without adapting to state</text>
+  <text x="765" y="682" text-anchor="middle" class="body">or recent interaction context.</text>
+
+  <path d="M960 575 C1050 575 1070 481 1070 422" fill="none" stroke="#c66b32" stroke-width="3" stroke-dasharray="9 8" marker-end="url(#arrow-warm)"/>
+
+  <rect x="1010" y="478" width="520" height="220" rx="20" fill="#f7f9fb" stroke="#c5d1da" stroke-width="2"/>
+  <text x="1042" y="521" class="label">POSSIBLE INTERACTION OUTCOME</text>
+  <text x="1042" y="568" class="body">The answer may feel generic or mistimed.</text>
+  <text x="1042" y="606" class="body">The user may need to repeat or rephrase,</text>
+  <text x="1042" y="644" class="body">or may stop the interaction.</text>
+  <path d="M1275 708 C1275 774 300 774 230 713" fill="none" stroke="#879bad" stroke-width="3" stroke-dasharray="10 9" marker-end="url(#arrow)"/>
+  <text x="755" y="762" text-anchor="middle" class="small">Feedback can become another request instead of an explicit state-aware adjustment.</text>
+
+  <line x1="80" y1="818" x2="1520" y2="818" stroke="#d9e1e7" stroke-width="2"/>
+  <text x="80" y="855" class="small">Conceptual illustration for problem framing; not a claim about every voice agent or an empirical evaluation.</text>
+</svg>

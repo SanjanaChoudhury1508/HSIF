@@ -1,0 +1,98 @@
+{
+  "id": "fig_2_11_observation_validity",
+  "number": "2.11",
+  "category": "human_state",
+  "title": "Human-state observation validity",
+  "caption": "Figure 2.11. Valid audio, unusable audio, and text-only turns remain distinct.",
+  "explanation": "Valid audio may yield a measured neutral emotion. Invalid audio features and text-only input are unmeasured and use unknown/invalid metadata rather than a neutral measurement. Text-only turns carry source=text_only and do not reuse a previous audio-derived value as the current observation.",
+  "nodes": [
+    {
+      "id": "audio_valid",
+      "label": "Valid audio features"
+    },
+    {
+      "id": "audio_invalid",
+      "label": "Audio present; required features unusable"
+    },
+    {
+      "id": "text",
+      "label": "Text-only request"
+    },
+    {
+      "id": "measured",
+      "label": "Observation valid; emotion may be Neutral"
+    },
+    {
+      "id": "unmeasured",
+      "label": "Not measured / unknown; observation_valid=false"
+    },
+    {
+      "id": "source",
+      "label": "Text source=text_only; invalid audio remains audio-sourced"
+    },
+    {
+      "id": "fusion",
+      "label": "Do not fuse unmeasured values as fresh observations"
+    },
+    {
+      "id": "ui",
+      "label": "UI says Not measured; hides emotion meters"
+    }
+  ],
+  "edges": [
+    {
+      "from": "audio_valid",
+      "to": "measured",
+      "label": "valid features"
+    },
+    {
+      "from": "audio_invalid",
+      "to": "unmeasured",
+      "label": "invalid features"
+    },
+    {
+      "from": "text",
+      "to": "unmeasured",
+      "label": "no audio observation"
+    },
+    {
+      "from": "measured",
+      "to": "fusion",
+      "label": "measured state"
+    },
+    {
+      "from": "unmeasured",
+      "to": "source",
+      "label": "retain source metadata"
+    },
+    {
+      "from": "source",
+      "to": "fusion",
+      "label": "validity-aware handling"
+    },
+    {
+      "from": "fusion",
+      "to": "ui",
+      "label": "display state"
+    }
+  ],
+  "references": [
+    "backend/app/services/pipeline_service.py",
+    "ai/human_state/hsr.py",
+    "ai/dialogue/fusion/state_fusion.py",
+    "frontend/src/components/HumanStatePanel.jsx",
+    "frontend/src/pages/HistoryPage.jsx"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 530,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

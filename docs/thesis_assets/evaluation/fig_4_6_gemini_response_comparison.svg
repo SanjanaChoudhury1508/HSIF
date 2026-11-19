@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="456" viewBox="0 0 1500 456">
+<title>Exploratory Gemini response comparison</title>
+<desc>Figure 4.6. Historical response ratings: exploratory results; reviewer provenance was not recorded.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/></marker></defs>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="750.0" y="48" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#18324b">Exploratory Gemini response comparison</text>
+<text x="330" y="160" text-anchor="end" font-family="Arial,sans-serif" font-size="17" fill="#20364b">Baseline mean rating</text>
+<rect x="350" y="130" width="653.4" height="40" rx="5" fill="#477a9e"/>
+<text x="1013.4" y="157" font-family="Arial,sans-serif" font-size="16" fill="#20364b">3.96 /5</text>
+<text x="330" y="252" text-anchor="end" font-family="Arial,sans-serif" font-size="17" fill="#20364b">Adaptive mean rating</text>
+<rect x="350" y="222" width="699.6" height="40" rx="5" fill="#477a9e"/>
+<text x="1059.6" y="249" font-family="Arial,sans-serif" font-size="16" fill="#20364b">4.24 /5</text>
+<text x="350" y="334" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Adaptive preference: 4 of 5 paired comparisons (separate count, not rating scale).</text>
+</svg>

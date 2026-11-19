@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1284" height="932" viewBox="0 0 1284 932">
+<title>Backend component architecture</title>
+<desc>Figure 2.3. Backend modules involved in processing and persistence.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/></marker></defs>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="642.0" y="48" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#18324b">Backend component architecture</text>
+<path d="M 642.0 192.0 L 642.0 234.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 504.0 326.0 L 378.0 368.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 420.0 414.0 L 462.0 414.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 822.0 414.0 L 864.0 414.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 864.0 444.0 L 420.0 518.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 420.0 548.0 L 462.0 548.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 822.0 548.0 L 864.0 548.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 906.0 594.0 L 780.0 636.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 688.0 326.0 L 998.0 636.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 1044.0 728.0 L 1044.0 770.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="462" y="100" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="146.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">process.py / streaming.py routes</text>
+<rect x="462" y="234" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="280.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">PipelineService</text>
+<rect x="60" y="368" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="403.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">SpeechService / preprocessing /</text>
+<text x="240.0" y="426.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">VAD / Whisper</text>
+<rect x="462" y="368" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="414.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">AcousticFeatureExtractor</text>
+<rect x="864" y="368" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="1044.0" y="414.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">HumanStateEngine</text>
+<rect x="60" y="502" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="548.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">TemporalSmoother / StateTracker</text>
+<rect x="462" y="502" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="548.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">DialogueService / StateFusion</text>
+<rect x="864" y="502" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="1044.0" y="548.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">DialoguePolicy</text>
+<rect x="462" y="636" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="671.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">LLMService / GroqProvider /</text>
+<text x="642.0" y="694.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">GeminiProvider</text>
+<rect x="864" y="636" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="1044.0" y="682.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">SessionRepository</text>
+<rect x="864" y="770" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="1044.0" y="816.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">SQLAlchemy models / PostgreSQL</text>
+</svg>

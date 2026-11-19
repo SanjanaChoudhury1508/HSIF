@@ -1,0 +1,21 @@
+flowchart LR
+  %% Figure 2.12: Adaptive dialogue policy workflow
+  turn["Audio-derived or text turn"]
+  state["StateFusion + current validity"]
+  memory["ConversationMemory retrieval"]
+  policy["DialoguePolicy rules"]
+  strategy["Selected strategy"]
+  prompt["PromptBuilder"]
+  provider["LLMService provider"]
+  response["Generated assistant response"]
+  persist["Successful turn persistence"]
+  client["REST result / WebSocket events"]
+  turn -->|text or measured state| state
+  state -->|fused flags| policy
+  memory -->|relevant/recent context| prompt
+  policy -->|ordered conditions| strategy
+  strategy -->|instructions| prompt
+  prompt -->|prompt| provider
+  provider -->|generated text| response
+  response -->|on success| persist
+  persist -->|response| client

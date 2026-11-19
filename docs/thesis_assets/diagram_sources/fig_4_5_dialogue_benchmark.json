@@ -1,0 +1,48 @@
+{
+  "id": "fig_4_5_dialogue_benchmark",
+  "number": "4.5",
+  "category": "evaluation",
+  "title": "Synthetic dialogue-policy behavior checks",
+  "caption": "Figure 4.5. Three hundred local policy attempts over five synthetic scenarios.",
+  "explanation": "Five synthetic cases were repeated 30 times for baseline and adaptive modes, totaling 300 local attempts. The experiment checks policy/strategy behavior, not external LLM response quality, user outcomes, or conversational effectiveness.",
+  "nodes": [],
+  "edges": [],
+  "references": [
+    "evaluation/benchmark_dialogue.py",
+    "evaluation/results/dialogue_20261030T163347Z_ba01ff17.json"
+  ],
+  "kind": "chart",
+  "metrics": [
+    {
+      "label": "Synthetic scenarios",
+      "value": 5,
+      "unit": "scenarios"
+    },
+    {
+      "label": "Repeats per mode",
+      "value": 30,
+      "unit": "attempts"
+    },
+    {
+      "label": "Modes",
+      "value": 2,
+      "unit": "modes"
+    },
+    {
+      "label": "Total attempts",
+      "value": 300,
+      "unit": "attempts"
+    }
+  ],
+  "canvas": {
+    "width": 1500,
+    "height": 530,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

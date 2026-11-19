@@ -291,7 +291,7 @@ def test_emotion_confirmation_keeps_label_and_score_consistent():
     # in the currently displayed "neutral" label.
     assert result.emotion.score == first.emotion.score
 
-def test_invalid_observation_returns_neutral_fallback_and_tracks_it():
+def test_invalid_observation_returns_unknown_and_tracks_it():
     engine = HumanStateEngine(enable_temporal_smoothing=True)
 
     state = engine.process(
@@ -302,8 +302,8 @@ def test_invalid_observation_returns_neutral_fallback_and_tracks_it():
 
     assert state.observation_valid is False
     assert state.timestamp == 12.0
-    assert state.emotion.label == "neutral"
-    assert state.emotion.score == 0.5
+    assert state.emotion.label == "unknown"
+    assert state.emotion.score == 0.0
 
     for field in (
         "hesitation",
@@ -358,6 +358,19 @@ def test_invalid_observation_keeps_public_hsr_schema():
         "cognitive_load",
     }
 
+
+def test_missing_acoustic_emotion_features_create_unknown_invalid_state():
+    engine = HumanStateEngine(enable_temporal_smoothing=True)
+    state = engine.process(
+        {"audio": {}, "vad": {}, "features": {}},
+        timestamp=1.0,
+    )
+
+    assert state.emotion.label == "unknown"
+    assert state.emotion.score == 0.0
+    assert state.observation_valid is False
+    assert engine.temporal_smoother._previous is None
+
 @pytest.mark.parametrize(
     ("value", "expected"),
     [
@@ -380,15 +393,15 @@ def test_clamp_score_handles_invalid_and_out_of_range_values(
 @pytest.mark.parametrize(
     ("result", "expected_label", "expected_score"),
     [
-        (None, "neutral", 0.5),
-        ({}, "neutral", 0.5),
+        (None, "unknown", 0.0),
+        ({}, "unknown", 0.0),
         ({"label": "excited", "score": 0.8}, "excited", 0.8),
         ({"label": "HAPPY", "score": 0.7}, "happy", 0.7),
         ({"label": " sad ", "score": 0.6}, "sad", 0.6),
-        ({"label": "unknown_emotion", "score": 0.9}, "neutral", 0.9),
-        ({"label": "", "score": 0.4}, "neutral", 0.4),
-        ({"label": None, "score": 0.4}, "neutral", 0.4),
-        ({"label": 123, "score": 0.4}, "neutral", 0.4),
+        ({"label": "unknown_emotion", "score": 0.9}, "unknown", 0.0),
+        ({"label": "", "score": 0.4}, "unknown", 0.0),
+        ({"label": None, "score": 0.4}, "unknown", 0.0),
+        ({"label": 123, "score": 0.4}, "unknown", 0.0),
     ],
 )
 def test_normalize_emotion_result_validates_label(

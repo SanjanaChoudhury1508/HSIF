@@ -1,0 +1,20 @@
+flowchart LR
+  %% Figure 2.7: Audio preprocessing and speech recognition
+  formats["WAV / MP3 / M4A / OGG / FLAC / AAC"]
+  limits["25 MiB upload maximum"]
+  convert["16 kHz mono signed 16-bit PCM"]
+  vad["30 ms frames; RMS threshold .01"]
+  segments["Speech intervals and pauses"]
+  transcribe["Faster-Whisper base, CPU/int8"]
+  features["Per-segment pitch + timing/energy"]
+  empty["Blank transcript → no-speech error"]
+  clean["Temporary audio cleanup"]
+  formats -->|validate extension| limits
+  limits -->|accepted file| convert
+  convert -->|WAV| vad
+  vad -->|speech intervals| segments
+  segments -->|audio transcript| transcribe
+  segments -->|selected intervals| features
+  transcribe -->|transcript validation| empty
+  features -->|derived file cleanup| clean
+  empty -->|finally| clean

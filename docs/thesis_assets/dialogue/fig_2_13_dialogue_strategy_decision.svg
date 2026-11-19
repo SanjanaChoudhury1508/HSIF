@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1284" height="798" viewBox="0 0 1284 798">
+<title>Dialogue strategy decision flow</title>
+<desc>Figure 2.13. Condensed policy precedence; synthetic cases do not establish audio-triggered coverage.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/></marker></defs>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="642.0" y="48" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#18324b">Dialogue strategy decision flow</text>
+<path d="M 420.0 146.0 L 462.0 146.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 822.0 146.0 L 864.0 146.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 864.0 176.0 L 420.0 250.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 420.0 280.0 L 462.0 280.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 822.0 280.0 L 864.0 280.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 864.0 310.0 L 420.0 384.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 420.0 414.0 L 462.0 414.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 822.0 414.0 L 864.0 414.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 864.0 444.0 L 420.0 518.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 420.0 548.0 L 462.0 548.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 822.0 548.0 L 864.0 548.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 864.0 578.0 L 420.0 652.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 420.0 682.0 L 462.0 682.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="60" y="100" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="146.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Fused state</text>
+<rect x="462" y="100" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="135.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">1. emotion frustrated? →</text>
+<text x="642.0" y="158.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">acknowledge_frustration</text>
+<rect x="864" y="100" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="1044.0" y="135.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">2. hesitation ≥ .7 AND confidence</text>
+<text x="1044.0" y="158.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">≤ .45? → reassure</text>
+<rect x="60" y="234" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="269.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">3. overloaded_uncertain AND</text>
+<text x="240.0" y="292.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">confidence ≤ .35? → simplify</text>
+<rect x="462" y="234" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="247.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">4. interaction</text>
+<text x="642.0" y="270.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">overloaded/overloaded_uncertain</text>
+<text x="642.0" y="293.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">AND load ≥ .9? →</text>
+<text x="642.0" y="316.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">reduce_information</text>
+<rect x="864" y="234" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="1044.0" y="280.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">5. hesitation ≥ .7? → slow_down</text>
+<rect x="60" y="368" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="403.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">6. interaction overloaded? →</text>
+<text x="240.0" y="426.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">simplify</text>
+<rect x="462" y="368" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="403.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">7. interaction struggling? →</text>
+<text x="642.0" y="426.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">clarify</text>
+<rect x="864" y="368" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="1044.0" y="403.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">8. interaction disengaged? →</text>
+<text x="1044.0" y="426.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">re_engage</text>
+<rect x="60" y="502" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="548.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">9. confident_engaged? → continue</text>
+<rect x="462" y="502" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="537.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">10. needs_clarification? uncertain</text>
+<text x="642.0" y="560.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">→ ask_follow_up; else clarify</text>
+<rect x="864" y="502" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="1044.0" y="537.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">11. needs_encouragement? →</text>
+<text x="1044.0" y="560.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">encourage</text>
+<rect x="60" y="636" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="682.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">12. otherwise → normal_response</text>
+<rect x="462" y="636" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="649.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Precedence ordered;</text>
+<text x="642.0" y="672.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">frustrated/uncertain labels are</text>
+<text x="642.0" y="695.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">not emitted by current audio</text>
+<text x="642.0" y="718.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">emotion detector</text>
+</svg>

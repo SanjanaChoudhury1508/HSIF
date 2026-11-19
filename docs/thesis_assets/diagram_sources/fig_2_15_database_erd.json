@@ -1,0 +1,46 @@
+{
+  "id": "fig_2_15_database_erd",
+  "number": "2.15",
+  "category": "database_api",
+  "title": "PostgreSQL entity–relationship model",
+  "caption": "Figure 2.15. SQLAlchemy session and conversation-turn tables; schema shown from model declarations.",
+  "explanation": "A session has a string primary key and timestamps. ConversationTurn uses an integer primary key, a non-null foreign key to sessions.id with cascade deletion, message text, JSONB human state, strategy text, and creation time. The relationship is one session to many turns. This diagram reflects ORM declarations; live database schema was not inspected.",
+  "nodes": [
+    {
+      "id": "session",
+      "label": "sessions\nPK id VARCHAR(100)\ncreated_at TIMESTAMP NOT NULL\nupdated_at TIMESTAMP NOT NULL",
+      "row": 0,
+      "col": 0
+    },
+    {
+      "id": "turn",
+      "label": "conversation_turns\nPK id INTEGER\nsession_id VARCHAR(100) FK NOT NULL\nuser_message TEXT NOT NULL\nassistant_message TEXT NOT NULL\nhuman_state JSONB NOT NULL\ndialogue_strategy VARCHAR(100) NOT NULL\ncreated_at TIMESTAMP NOT NULL",
+      "row": 0,
+      "col": 1
+    }
+  ],
+  "edges": [
+    {
+      "from": "session",
+      "to": "turn",
+      "label": "1 to many; FK ON DELETE CASCADE"
+    }
+  ],
+  "references": [
+    "database/models.py:Session",
+    "database/models.py:ConversationTurn",
+    "database/repository.py"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 440,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 270,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

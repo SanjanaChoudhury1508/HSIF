@@ -1,0 +1,48 @@
+{
+  "id": "fig_4_2_cremad_evaluation",
+  "number": "4.2",
+  "category": "evaluation",
+  "title": "CREMA-D emotion evaluation results",
+  "caption": "Figure 4.2. CREMA-D evaluation metrics; data were evaluated, not used for training.",
+  "explanation": "The stored result covers 7,442 recordings. The six-reference-class accuracy is 21.61%; six-class macro-F1 recomputed from stored per-class values is approximately .156. On the happy/neutral/sad subset, accuracy is approximately .443 and macro-F1 approximately .439. Detector outputs are narrower than the six reference classes, so these numbers should not be generalized as overall emotion-recognition accuracy.",
+  "nodes": [],
+  "edges": [],
+  "references": [
+    "evaluation/benchmark_cremad_emotion.py",
+    "evaluation/results/cremad"
+  ],
+  "kind": "chart",
+  "metrics": [
+    {
+      "label": "Six-class accuracy",
+      "value": 21.61,
+      "unit": "%"
+    },
+    {
+      "label": "Six-class macro-F1",
+      "value": 15.6,
+      "unit": "%"
+    },
+    {
+      "label": "Happy/neutral/sad accuracy",
+      "value": 44.3,
+      "unit": "%"
+    },
+    {
+      "label": "Happy/neutral/sad macro-F1",
+      "value": 43.9,
+      "unit": "%"
+    }
+  ],
+  "canvas": {
+    "width": 1500,
+    "height": 548,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

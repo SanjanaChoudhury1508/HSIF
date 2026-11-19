@@ -1,0 +1,19 @@
+flowchart LR
+  %% Figure 2.10: State fusion and temporal smoothing
+  obs["Current HSR observation"]
+  valid["Validity check"]
+  invalid["Invalid: preserve previous smoother baseline; no fresh change"]
+  smooth["Numeric smoothing, alpha = 0.4"]
+  label["Emotion confirmation count = 1 by default"]
+  tracker["StateTracker, threshold = 0.1"]
+  history["State history / changes"]
+  fusion["StateFusion interaction flags"]
+  policy["DialoguePolicy input"]
+  obs -->|check metadata| valid
+  valid -->|false| invalid
+  valid -->|true| smooth
+  smooth -->|smoothed scores| label
+  label -->|current label| tracker
+  tracker -->|thresholded changes| history
+  history -->|state/context| fusion
+  fusion -->|fused state| policy

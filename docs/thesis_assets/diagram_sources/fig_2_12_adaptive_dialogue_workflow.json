@@ -1,0 +1,138 @@
+{
+  "id": "fig_2_12_adaptive_dialogue_workflow",
+  "number": "2.12",
+  "category": "dialogue",
+  "title": "Adaptive dialogue policy workflow",
+  "caption": "Figure 2.12. HSR/context to strategy and generated response.",
+  "explanation": "DialogueService combines the current interaction with conversation memory, fuses valid state or handles unmeasured input, applies ordered policy rules, and constructs a prompt. LLMService dispatches to the configured provider. The API returns the strategy and generated text; successful turns are persisted.",
+  "nodes": [
+    {
+      "id": "turn",
+      "label": "Audio-derived or text turn",
+      "row": 0,
+      "col": 0
+    },
+    {
+      "id": "state",
+      "label": "StateFusion + current validity",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "memory",
+      "label": "ConversationMemory retrieval",
+      "row": 0,
+      "col": 2
+    },
+    {
+      "id": "policy",
+      "label": "DialoguePolicy rules",
+      "row": 1,
+      "col": 2
+    },
+    {
+      "id": "strategy",
+      "label": "Selected strategy",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "prompt",
+      "label": "PromptBuilder",
+      "row": 1,
+      "col": 0
+    },
+    {
+      "id": "provider",
+      "label": "LLMService provider",
+      "row": 2,
+      "col": 0
+    },
+    {
+      "id": "response",
+      "label": "Generated assistant response",
+      "row": 2,
+      "col": 1
+    },
+    {
+      "id": "persist",
+      "label": "Successful turn persistence",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "client",
+      "label": "REST result / WebSocket events",
+      "row": 3,
+      "col": 1
+    }
+  ],
+  "edges": [
+    {
+      "from": "turn",
+      "to": "state",
+      "label": "text or measured state"
+    },
+    {
+      "from": "state",
+      "to": "policy",
+      "label": "fused flags"
+    },
+    {
+      "from": "memory",
+      "to": "prompt",
+      "label": "relevant/recent context"
+    },
+    {
+      "from": "policy",
+      "to": "strategy",
+      "label": "ordered conditions"
+    },
+    {
+      "from": "strategy",
+      "to": "prompt",
+      "label": "instructions"
+    },
+    {
+      "from": "prompt",
+      "to": "provider",
+      "label": "prompt"
+    },
+    {
+      "from": "provider",
+      "to": "response",
+      "label": "generated text"
+    },
+    {
+      "from": "response",
+      "to": "persist",
+      "label": "on success"
+    },
+    {
+      "from": "persist",
+      "to": "client",
+      "label": "response"
+    }
+  ],
+  "references": [
+    "ai/dialogue/dialogue_service.py",
+    "ai/dialogue/fusion/state_fusion.py",
+    "ai/dialogue/policy/dialogue_policy.py",
+    "ai/dialogue/memory/conversation_memory.py",
+    "ai/dialogue/prompt_builder.py",
+    "backend/app/services/llm/llm_service.py",
+    "backend/app/services/pipeline_service.py"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 664,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

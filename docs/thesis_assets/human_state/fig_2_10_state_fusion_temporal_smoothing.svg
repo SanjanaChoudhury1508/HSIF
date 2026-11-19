@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1284" height="530" viewBox="0 0 1284 530">
+<title>State fusion and temporal smoothing</title>
+<desc>Figure 2.10. Validity-aware temporal state handling and dialogue fusion.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/></marker></defs>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="642.0" y="48" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#18324b">State fusion and temporal smoothing</text>
+<path d="M 420.0 146.0 L 462.0 146.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 822.0 146.0 L 864.0 146.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 504.0 192.0 L 378.0 234.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 420.0 280.0 L 462.0 280.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 822.0 280.0 L 864.0 280.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 864.0 310.0 L 420.0 384.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 420.0 414.0 L 462.0 414.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M 822.0 414.0 L 864.0 414.0" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="60" y="100" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="146.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Current HSR observation</text>
+<rect x="462" y="100" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="146.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Validity check</text>
+<rect x="864" y="100" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="1044.0" y="135.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Invalid: preserve previous</text>
+<text x="1044.0" y="158.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">smoother baseline; no fresh change</text>
+<rect x="60" y="234" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="280.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Numeric smoothing, alpha = 0.4</text>
+<rect x="462" y="234" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="269.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">Emotion confirmation count = 1 by</text>
+<text x="642.0" y="292.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">default</text>
+<rect x="864" y="234" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="1044.0" y="280.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">StateTracker, threshold = 0.1</text>
+<rect x="60" y="368" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="240.0" y="414.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">State history / changes</text>
+<rect x="462" y="368" width="360" height="92" rx="12" fill="#f4f7f9" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="642.0" y="414.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">StateFusion interaction flags</text>
+<rect x="864" y="368" width="360" height="92" rx="12" fill="#eaf1f6" stroke="#8da2b5" stroke-width="1.5"/>
+<text x="1044.0" y="414.0" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" fill="#20364b">DialoguePolicy input</text>
+</svg>

@@ -1,0 +1,136 @@
+{
+  "id": "fig_2_14_llm_provider_integration",
+  "number": "2.14",
+  "category": "dialogue",
+  "title": "LLM provider integration",
+  "caption": "Figure 2.14. Configuration selects one provider; no automatic fallback is implemented.",
+  "explanation": "LLMService validates LLM_PROVIDER and constructs either GroqProvider or GeminiProvider. Groq is the source default. Each adapter sends a prompt to its external service and returns text or a typed safe error. The application does not automatically switch providers after a failure.",
+  "nodes": [
+    {
+      "id": "config",
+      "label": "LLM_PROVIDER configuration",
+      "row": 0,
+      "col": 1
+    },
+    {
+      "id": "service",
+      "label": "LLMService",
+      "row": 1,
+      "col": 1
+    },
+    {
+      "id": "groq",
+      "label": "GroqProvider (default)",
+      "row": 2,
+      "col": 0
+    },
+    {
+      "id": "gemini",
+      "label": "GeminiProvider (supported)",
+      "row": 2,
+      "col": 2
+    },
+    {
+      "id": "external_g",
+      "label": "External Groq API",
+      "row": 3,
+      "col": 0
+    },
+    {
+      "id": "external_m",
+      "label": "External Gemini API",
+      "row": 3,
+      "col": 2
+    },
+    {
+      "id": "success",
+      "label": "Non-empty generated response",
+      "row": 4,
+      "col": 0
+    },
+    {
+      "id": "errors",
+      "label": "Typed timeout / auth / rate / incomplete / unavailable errors",
+      "row": 4,
+      "col": 2
+    },
+    {
+      "id": "api",
+      "label": "Safe API/WebSocket response",
+      "row": 5,
+      "col": 1
+    }
+  ],
+  "edges": [
+    {
+      "from": "config",
+      "to": "service",
+      "label": "validate provider"
+    },
+    {
+      "from": "service",
+      "to": "groq",
+      "label": "if groq"
+    },
+    {
+      "from": "service",
+      "to": "gemini",
+      "label": "if gemini"
+    },
+    {
+      "from": "groq",
+      "to": "external_g",
+      "label": "request"
+    },
+    {
+      "from": "gemini",
+      "to": "external_m",
+      "label": "request"
+    },
+    {
+      "from": "external_g",
+      "to": "success",
+      "label": "response"
+    },
+    {
+      "from": "external_m",
+      "to": "success",
+      "label": "response"
+    },
+    {
+      "from": "external_g",
+      "to": "errors",
+      "label": "provider error"
+    },
+    {
+      "from": "external_m",
+      "to": "errors",
+      "label": "provider error"
+    },
+    {
+      "from": "errors",
+      "to": "api",
+      "label": "mapped error; no fallback"
+    }
+  ],
+  "references": [
+    "backend/app/services/llm/llm_service.py",
+    "backend/app/services/llm/groq_provider.py",
+    "backend/app/services/llm/gemini_provider.py",
+    "backend/app/services/llm/errors.py",
+    "backend/app/api/process.py",
+    "backend/app/api/streaming.py"
+  ],
+  "kind": "flow",
+  "canvas": {
+    "width": 1284,
+    "height": 932,
+    "columns": 3,
+    "margin_x": 60,
+    "margin_y": 100,
+    "card_width": 360,
+    "card_height": 92,
+    "gap_x": 42,
+    "gap_y": 42
+  }
+}

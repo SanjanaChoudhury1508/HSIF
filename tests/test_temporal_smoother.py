@@ -34,6 +34,21 @@ def test_first_observation_passes_through():
     assert smoother.smooth(state) is state
 
 
+def test_default_smoothing_preserves_stable_labels_and_accepts_changes():
+    smoother = TemporalSmoother()
+
+    neutral = smoother.smooth(make_state(emotion="neutral", timestamp=1.0))
+    stable = smoother.smooth(make_state(emotion="neutral", timestamp=2.0))
+    sad = smoother.smooth(make_state(emotion="sad", timestamp=3.0))
+    excited = smoother.smooth(make_state(emotion="excited", timestamp=4.0))
+
+    assert neutral.emotion.label == "neutral"
+    assert stable.emotion.label == "neutral"
+    assert sad.emotion.label == "sad"
+    assert excited.emotion.label == "excited"
+    assert smoother.emotion_confirmation_count == 1
+
+
 def test_numeric_scores_are_smoothed():
     smoother = TemporalSmoother(alpha=0.4)
 
