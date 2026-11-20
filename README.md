@@ -347,20 +347,6 @@ The optional CREMA-D evaluation script is `evaluation/benchmark_cremad_emotion.p
 - Reduce repeated interim transcription work while preserving the final full-recording transcription pass.
 - Share or externalize in-memory session state if deploying multiple backend workers.
 
-## Screenshots
-
-Place screenshots captured from the running application under `docs/screenshots/` using these filenames:
-
-- `01-dashboard.png`
-- `02-text-interaction.png`
-- `03-audio-interaction.png`
-- `04-human-state-panel.png`
-- `05-conversation-history.png`
-- `06-analytics.png`
-- `07-api-documentation.png`
-
-These screenshots are not currently present in the repository. Capture them from the working application before adding Markdown image links; no placeholder images are included.
-
 ## Team
 
 - Sanjana
